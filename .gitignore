@@ -1,0 +1,20 @@
+# Dependencies
+node_modules/
+
+# Environment variables
+.env
+.env.local
+
+# Prisma generated
+Backend/src/generated/
+
+# Next.js
+Frontend/.next/
+Frontend/out/
+
+# Debug logs
+npm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db

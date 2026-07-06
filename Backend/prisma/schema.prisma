@@ -23,11 +23,15 @@ model User {
   password   String
   role       Role       @default(USER)
   phone      String
-  isVerified Boolean    @default(false)
-  createdAt  DateTime   @default(now())
-  updatedAt  DateTime   @updatedAt
+  isVerified          Boolean    @default(false)
+  
+  resetPasswordToken  String?
+  resetPasswordExpire DateTime?
 
-  addresses  Address[]
+  createdAt           DateTime   @default(now())
+  updatedAt           DateTime   @updatedAt
+
+  addresses           Address[]
   orders     Order[]
   reviews    Review[]
   cart       Cart?
