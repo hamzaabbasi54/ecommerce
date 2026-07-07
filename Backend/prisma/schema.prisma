@@ -23,6 +23,7 @@ model User {
   password   String
   role       Role       @default(USER)
   phone      String
+  profileImage        String?
   isVerified          Boolean    @default(false)
   
   resetPasswordToken  String?
