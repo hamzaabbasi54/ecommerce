@@ -7,6 +7,9 @@ import userRoutes from '../routes/userRoutes.js';
 import productRoutes from '../routes/productRoutes.js';
 import categoryRoutes from '../routes/categoryRoutes.js';
 import brandRoutes from '../routes/brandRoutes.js';
+import cartRoutes from '../routes/cartRoutes.js';
+import wishlistRoutes from '../routes/wishlistRoutes.js';
+import reviewRoutes from '../routes/reviewRoutes.js';
 import adminRoutes from '../routes/adminRoutes.js';
 
 dotenv.config();
@@ -26,6 +29,9 @@ app.use('/api/users', userRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/brands', brandRoutes);
+app.use('/api/cart', cartRoutes);
+app.use('/api/wishlist', wishlistRoutes);
+app.use('/api/reviews', reviewRoutes);
 app.use('/api/admin', adminRoutes);
 
 
