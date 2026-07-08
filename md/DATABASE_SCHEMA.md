@@ -4,7 +4,7 @@
 ## Entities & relationships (draft — refine as you go)
 
 **User**
-- id, name, email (unique), password (hashed), role (user/admin — single flat admin role, no tiers), phone, isVerified, createdAt, updatedAt
+- id, name, email (unique), password (hashed), role (user/admin — single flat admin role, no tiers), phone, isVerified, profileImage, resetPasswordToken, resetPasswordExpire, createdAt, updatedAt
 - 1:N → Addresses, Orders, Reviews, Cart, Wishlist
 
 **Address**

@@ -1,6 +1,4 @@
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import prisma from '../database/prisma.js';
 
 // POST /api/reviews
 // Add a review to a product

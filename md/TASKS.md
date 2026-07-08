@@ -17,27 +17,27 @@
 - [ ] Commit: "Database Models Added"
 
 ## Phase 2 — Auth Module (backend)
-- [ ] Register, Login, Logout
-- [ ] Password hashing (bcrypt)
-- [ ] JWT issue + verify middleware
-- [ ] Protected route middleware
-- [ ] Forgot/Reset/Change password
-- [ ] Test ALL of these in Postman before moving on
-- [ ] Commit: "User Authentication"
+- [x] Register, Login, Logout
+- [x] Password hashing (bcrypt)
+- [x] JWT issue + verify middleware
+- [x] Protected route middleware
+- [x] Forgot/Reset/Change password
+- [x] Test ALL of these in Postman before moving on
+- [x] Commit: "User Authentication"
 
 ## Phase 3 — Core Product APIs (backend)
-- [ ] Categories CRUD
-- [ ] Brands CRUD
-- [ ] Products CRUD + pagination + search + filter + sort
-- [ ] Postman test everything
-- [ ] Commit: "Product APIs Completed"
+- [x] Categories CRUD
+- [x] Brands CRUD
+- [x] Products CRUD + pagination + search + filter + sort
+- [x] Postman test everything
+- [x] Commit: "Product APIs Completed"
 
 ## Phase 4 — Cart, Wishlist, Reviews (backend)
-- [ ] Cart add/remove/update/get
-- [ ] Wishlist add/remove/list
-- [ ] Reviews CRUD
-- [ ] Postman test everything
-- [ ] Commit: "Cart Module Completed"
+- [x] Cart add/remove/update/get
+- [x] Wishlist add/remove/list
+- [x] Reviews CRUD
+- [x] Postman test everything
+- [x] Commit: "Cart Module Completed"
 
 ## Phase 5 — Checkout & Orders (backend)
 - [ ] Address management APIs
@@ -50,8 +50,8 @@
 ## Phase 6 — Frontend Foundation
 - [ ] Layout, navbar, footer, theme (colors/fonts locked once)
 - [ ] Auth pages (login/register) wired to backend
-- [ ] Axios service layer + auth context/store
-- [ ] Protected route handling on frontend
+- [x] Axios service layer + auth context/store (services and hooks done, context pending)
+- [x] Protected route handling on frontend (middleware.js created)
 
 ## Phase 7 — Frontend Feature Integration
 - [ ] Product listing + details + filters/search

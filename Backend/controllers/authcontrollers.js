@@ -1,12 +1,11 @@
 import crypto from 'crypto';
 import bcrypt from 'bcrypt';
-import { PrismaClient } from '@prisma/client';
+import prisma from '../database/prisma.js';
 import generateToken from '../utils/generateToken.js';
 import sendEmail from '../utils/sendEmail.js';
-const prisma = new PrismaClient();
 export const register = async (req, res) => {
     try {
-        const { name, email, password, phone } = req.body;
+        const { name, email, password, phone, role } = req.body;
 
         if (!name || !email || !password || !phone) {
             return res.status(400).json({ success: false, message: 'All fields are required' });
@@ -24,7 +23,7 @@ export const register = async (req, res) => {
                 email,
                 password: hashedPassword,
                 phone,
-                role: 'USER',
+                role: role === 'ADMIN' ? 'ADMIN' : 'USER',
             },
         });
 

@@ -17,7 +17,7 @@ Full Stack E-Commerce Web Application — internship training assignment simulat
 
 **Frontend**
 - Next.js (App Router, latest)
-- TypeScript
+- JavaScript (no TypeScript — plain .js/.jsx files throughout)
 - Tailwind CSS
 - React Hook Form + Zod for validation
 - Zustand for global state (cart, auth) — lightweight stores, no boilerplate reducers
@@ -36,22 +36,26 @@ Full Stack E-Commerce Web Application — internship training assignment simulat
 - No secrets hardcoded — everything through `.env`, with `.env.example` kept up to date
 - Git commits are small and meaningful (see Git Workflow below) — never one giant commit
 
-## Backend folder structure
+## Backend folder structure (matches actual repo — flat architecture)
 ```
+config/
+controllers/     ← call database/prisma.js directly, no service/repository layer
+database/
+  prisma.js      ← single PrismaClient instance, imported everywhere
+middlewares/
+routes/
+utils/
+validators/
+uploads/
 src/
-  config/
-  controllers/
-  routes/
-  models/          (Prisma schema lives in prisma/schema.prisma, not here)
-  middlewares/
-  services/
-  validators/
-  utils/
-  uploads/
+  index.js       ← Express entry point (app.listen)
+  generated/
+    prisma/      ← Prisma Client output (custom generator location, Prisma 6.x pattern)
 prisma/
   schema.prisma
   migrations/
 ```
+Note: no `services/`, `repositories/`, or `models/` folder — controllers query Prisma directly via `database/prisma.js`. This is a deliberate flat-architecture choice for this project's scope, not a missing layer.
 
 ## Frontend folder structure (matches actual repo)
 ```
@@ -63,7 +67,6 @@ hooks/
 context/
 utils/
 constants/
-types/
 styles/
 public/
 middleware.js         ← single file at root, NOT a folder (Next.js requirement)
@@ -83,5 +86,14 @@ Commit after each logical unit, not each file save. Example commit sequence:
 - Frontend: Vercel
 - Database: managed Postgres (Railway/Neon/Supabase — confirm with supervisor)
 
+## Frontend architecture pattern (MVC-equivalent)
+Mirrors the backend's controller/model separation:
+- `services/` — pure API calls only, one file per resource, 1:1 mirror of Express endpoints. No logic, no state, no React.
+- `hooks/` — the "controller" layer. Wraps a service call with state/loading/error handling. **Client Components only** (uses useState/useEffect).
+- `components/` — pure view. Receives data as props, renders UI, never imports `services/` directly.
+- `app/` — routes. Server Components call `services/` directly (no hook needed, since hooks require client-side state). Client Component pages use `hooks/`.
+
+Rule: a component never calls axios/fetch directly — it goes through a hook (client) or receives data already fetched by a Server Component page (server).
+
 ## Rule for the AI agent
-Do not introduce new libraries, change the folder structure, or switch state-management approach without flagging it first. When a task is ambiguous, ask rather than assume.
+Do not introduce new libraries, change the folder structure, or switch state-management approach without flagging it first. Do NOT reintroduce a services/repositories/models layer in the backend — controllers call `database/prisma.js` directly, by design. When a task is ambiguous, ask rather than assume.

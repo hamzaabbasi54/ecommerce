@@ -1,6 +1,4 @@
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import prisma from '../database/prisma.js';
 
 // Helper function to get or create a cart for the logged-in user
 const getOrCreateCart = async (userId) => {

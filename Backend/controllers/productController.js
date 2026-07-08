@@ -1,6 +1,4 @@
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import prisma from '../database/prisma.js';
 
 // Helper: Generate a URL-friendly slug from a product name
 const generateSlug = (name) => {

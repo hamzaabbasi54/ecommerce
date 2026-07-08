@@ -1,6 +1,4 @@
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import prisma from '../database/prisma.js';
 
 // POST /api/wishlist
 // Add a product to the user's wishlist
