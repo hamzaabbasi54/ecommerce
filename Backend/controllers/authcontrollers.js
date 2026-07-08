@@ -120,7 +120,7 @@ export const forgotPassword = async (req, res) => {
         });
 
         // 4. Build the reset URL and email HTML
-        const resetUrl = `${process.env.FRONTEND_URL}/resetpassword/${resetToken}`;
+        const resetUrl = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
         
         const html = `
             <h1>Password Reset Request</h1>

@@ -16,12 +16,19 @@ const axiosInstance = axios.create({
 axiosInstance.interceptors.response.use(
   (response) => response,
   (error) => {
+    // 1. Handle 401 Unauthorized globally
     if (error.response && error.response.status === 401) {
       if (typeof window !== 'undefined') {
         window.location.href = '/login';
       }
     }
-    return Promise.reject(error);
+    
+    // 2. Centralized Error Formatting
+    // Extract the exact error message from the backend, or fallback to a standard error.
+    const customMessage = error.response?.data?.message || error.message || 'An unexpected error occurred';
+    
+    // Reject with a standard Error object so all UI components can just catch `error.message`
+    return Promise.reject(new Error(customMessage));
   }
 );
 

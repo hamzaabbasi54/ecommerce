@@ -9,6 +9,8 @@ import Link from 'next/link';
 
 import { login } from '@/services/authService';
 import useAuthStore from '@/context/useAuthStore';
+import Input from '@/components/ui/Input';
+import Button from '@/components/ui/Button';
 
 // 1. Zod schema for form validation
 const loginSchema = z.object({
@@ -48,10 +50,8 @@ export default function LoginPage() {
         }
       }
     } catch (error) {
-      // On failure: capture and display the backend message
-      setApiError(
-        error.response?.data?.message || error.message || 'Login failed. Please try again.'
-      );
+      // Due to our centralized Axios interceptor, error is now always a standard JS Error
+      setApiError(error.message);
     } finally {
       setIsSubmitting(false);
     }
@@ -80,47 +80,31 @@ export default function LoginPage() {
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             
             {/* Email Input */}
-            <div className="space-y-1">
-              <label className="block font-label-sm text-label-sm text-on-surface-variant" htmlFor="email">
-                Email Address
-              </label>
-              <input 
-                {...register('email')}
-                className={`w-full h-12 px-4 bg-surface-container-lowest border ${errors.email ? 'border-error focus:ring-error focus:border-error' : 'border-outline-variant focus:ring-primary-container focus:border-primary-container'} rounded-lg font-body-md text-body-md text-on-surface placeholder:text-outline focus:outline-none focus:ring-1 transition-colors duration-200`}
-                id="email" 
-                type="email" 
-                placeholder="name@example.com" 
-              />
-              {errors.email && (
-                <p className="text-error text-xs mt-1">{errors.email.message}</p>
-              )}
-            </div>
+            <Input 
+              label="Email Address"
+              id="email"
+              type="email"
+              placeholder="name@example.com"
+              error={errors.email?.message}
+              {...register('email')}
+            />
 
             {/* Password Input */}
-            <div className="space-y-1">
-              <label className="block font-label-sm text-label-sm text-on-surface-variant" htmlFor="password">
-                Password
-              </label>
-              <input 
-                {...register('password')}
-                className={`w-full h-12 px-4 bg-surface-container-lowest border ${errors.password ? 'border-error focus:ring-error focus:border-error' : 'border-outline-variant focus:ring-primary-container focus:border-primary-container'} rounded-lg font-body-md text-body-md text-on-surface placeholder:text-outline focus:outline-none focus:ring-1 transition-colors duration-200`}
-                id="password" 
-                type="password" 
-                placeholder="••••••••" 
-              />
-              {errors.password && (
-                <p className="text-error text-xs mt-1">{errors.password.message}</p>
-              )}
-            </div>
+            <Input 
+              label="Password"
+              id="password"
+              type="password"
+              placeholder="••••••••"
+              error={errors.password?.message}
+              {...register('password')}
+            />
 
             {/* Primary Button */}
-            <button 
-              type="submit" 
-              disabled={isSubmitting}
-              className="w-full h-12 bg-primary-container text-on-primary-container font-button text-button rounded-lg hover:bg-primary transition-colors duration-200 mt-2 disabled:opacity-70 disabled:cursor-not-allowed"
-            >
-              {isSubmitting ? 'LOGGING IN...' : 'LOG IN'}
-            </button>
+            <div className="pt-2">
+              <Button type="submit" isLoading={isSubmitting}>
+                Log In
+              </Button>
+            </div>
           </form>
 
           {/* Links */}
