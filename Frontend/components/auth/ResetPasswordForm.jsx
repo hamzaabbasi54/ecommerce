@@ -21,7 +21,7 @@ const resetPasswordSchema = z.object({
   path: ["confirmPassword"],
 });
 
-export default function ResetPasswordPage() {
+export default function ResetPasswordForm() {
   const router = useRouter();
   const params = useParams();
   const resetToken = params?.token;
@@ -65,9 +65,8 @@ export default function ResetPasswordPage() {
   };
 
   return (
-    <div className="bg-background text-foreground min-h-screen flex flex-col justify-center items-center p-4 md:p-10 font-sans antialiased">
-      
-      <main className="w-full max-w-md bg-card text-card-foreground border rounded-lg shadow-sm p-8 md:p-12 flex flex-col gap-8">
+    <div className="w-full max-w-md flex flex-col gap-8">
+      <div className="bg-card text-card-foreground border rounded-lg shadow-sm p-8 md:p-12 flex flex-col gap-8">
         
         {/* Header */}
         <header className="text-center flex flex-col gap-2">
@@ -134,15 +133,14 @@ export default function ResetPasswordPage() {
           </Link>
         </div>
 
-      </main>
+      </div>
 
       {/* Footer */}
-      <footer className="mt-12 text-center">
+      <footer className="mt-4 text-center">
         <p className="text-xs text-muted-foreground">
           © 2026 Electronica. Engineered Excellence.
         </p>
       </footer>
-
     </div>
   );
 }
