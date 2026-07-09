@@ -25,13 +25,7 @@ export default function LoginForm() {
   const [apiError, setApiError] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm({
-    resolver: zodResolver(loginSchema),
-  });
+  const { register, handleSubmit, formState: { errors }, } = useForm({ resolver: zodResolver(loginSchema),});
 
   const onSubmit = async (data) => {
     setApiError(null);

@@ -29,13 +29,7 @@ export default function RegisterForm() {
   const [apiError, setApiError] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm({
-    resolver: zodResolver(registerSchema),
-  });
+  const { register, handleSubmit,formState: { errors }, } = useForm({  resolver: zodResolver(registerSchema),});
 
   const onSubmit = async (data) => {
     setApiError(null);

@@ -1,103 +1,73 @@
-'use client';
-
-import { useState, useCallback } from 'react';
+import { create } from 'zustand';
 import * as cartService from '@/services/cartService';
 
-/**
- * useCart — controller hook for cart operations.
- * Wraps cartService calls with loading/error/data state.
- * Client Component only (uses React state).
- */
-export default function useCart() {
-  const [cart, setCart] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+const useCartStore = create((set, get) => ({
+  cart: null,
+  loading: false,
+  error: null,
 
-  /** Fetch the current user's cart */
-  const fetchCart = useCallback(async () => {
-    setLoading(true);
-    setError(null);
+  fetchCart: async () => {
+    set({ loading: true, error: null });
     try {
       const result = await cartService.getCart();
       if (result.success) {
-        setCart(result.data);
+        set({ cart: result.data });
       }
       return result;
     } catch (err) {
       const message = err.response?.data?.message || err.message || 'Failed to fetch cart';
-      setError(message);
+      set({ error: message });
       return null;
     } finally {
-      setLoading(false);
+      set({ loading: false });
     }
-  }, []);
+  },
 
-  /**
-   * Add a product to cart
-   * @param {string} productId
-   * @param {number} quantity
-   */
-  const addItem = useCallback(async (productId, quantity = 1) => {
-    setLoading(true);
-    setError(null);
+  addItem: async (productId, quantity = 1) => {
+    set({ loading: true, error: null });
     try {
       const result = await cartService.addToCart({ productId, quantity });
+      // Re-fetch cart to get updated state
+      await get().fetchCart();
       return result;
     } catch (err) {
       const message = err.response?.data?.message || err.message || 'Failed to add to cart';
-      setError(message);
+      set({ error: message });
       return null;
     } finally {
-      setLoading(false);
+      set({ loading: false });
     }
-  }, []);
+  },
 
-  /**
-   * Update a cart item's quantity
-   * @param {string} itemId - CartItem ID
-   * @param {number} quantity
-   */
-  const updateItem = useCallback(async (itemId, quantity) => {
-    setLoading(true);
-    setError(null);
+  updateItem: async (itemId, quantity) => {
+    set({ loading: true, error: null });
     try {
       const result = await cartService.updateCartItem(itemId, quantity);
+      await get().fetchCart();
       return result;
     } catch (err) {
       const message = err.response?.data?.message || err.message || 'Failed to update cart item';
-      setError(message);
+      set({ error: message });
       return null;
     } finally {
-      setLoading(false);
+      set({ loading: false });
     }
-  }, []);
+  },
 
-  /**
-   * Remove an item from the cart
-   * @param {string} itemId - CartItem ID
-   */
-  const removeItem = useCallback(async (itemId) => {
-    setLoading(true);
-    setError(null);
+  removeItem: async (itemId) => {
+    set({ loading: true, error: null });
     try {
       const result = await cartService.removeFromCart(itemId);
+      await get().fetchCart();
       return result;
     } catch (err) {
       const message = err.response?.data?.message || err.message || 'Failed to remove item';
-      setError(message);
+      set({ error: message });
       return null;
     } finally {
-      setLoading(false);
+      set({ loading: false });
     }
-  }, []);
+  },
+}));
 
-  return {
-    cart,
-    loading,
-    error,
-    fetchCart,
-    addItem,
-    updateItem,
-    removeItem,
-  };
-}
+export default useCartStore;

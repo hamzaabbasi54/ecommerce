@@ -16,7 +16,7 @@ const useAuthStore = create((set) => ({
     } catch (error) {
       console.error('Logout API failed, proceeding with local logout', error);
     } finally {
-      // Clear local state regardless of API success/failure
+      // Clear local state regardless of API success/failure 
       set({ user: null, isAuthenticated: false });
       
       // Redirect to login page

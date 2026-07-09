@@ -10,58 +10,51 @@
 
 ## SECTION A — Public / User-facing screens
 
-### Auth
-- [ ] Register — `app/(auth)/register/page.tsx` — **Client** (form, RHF+Zod)
-- [ ] Login — `app/(auth)/login/page.tsx` — **Client**
-- [ ] Forgot Password — `app/(auth)/forgot-password/page.tsx` — **Client**
-- [ ] Reset Password — `app/(auth)/reset-password/[token]/page.tsx` — **Client**
+### Auth (✅ COMPLETED)
+- [x] Register — `app/(auth)/register/page.jsx` (**Server** SEO) + `components/auth/RegisterForm.jsx` (**Client**)
+- [x] Login — `app/(auth)/login/page.jsx` (**Server** SEO) + `components/auth/LoginForm.jsx` (**Client**)
+- [x] Forgot Password — `app/(auth)/forgot-password/page.jsx` (**Server** SEO) + `components/auth/ForgotPasswordForm.jsx` (**Client**)
+- [x] Reset Password — `app/(auth)/reset-password/[token]/page.jsx` (**Server** SEO) + `components/auth/ResetPasswordForm.jsx` (**Client**)
 
-### User account
-- [ ] Profile view — `app/account/profile/page.tsx` — **Server** shell + `components/ProfileEditForm.tsx` **Client**
-- [ ] Change Password — `app/account/change-password/page.tsx` — **Client**
-- [ ] Address Management — `app/account/addresses/page.tsx` — **Server** list + `components/AddressForm.tsx` **Client**
+### User account (Profile)
+- [ ] Profile view — `app/profile/page.jsx` (**Server** SEO) + `components/profile/ProfileEditForm.jsx` (**Client**)
+- [ ] Profile Image Upload — `components/profile/ProfileImageUpload.jsx` (**Client**)
+- [ ] Change Password — `components/profile/ChangePasswordForm.jsx` (**Client**)
+- [ ] Address Management — `app/profile/addresses/page.jsx` (**Server** SEO) + `components/profile/AddressForm.jsx` (**Client**)
 
 ### Catalog
-- [ ] Product Listing — `app/products/page.tsx` — **Server** + `components/ProductFilters.tsx` **Client**
-- [ ] Product Details — `app/products/[slug]/page.tsx` — **Server** + `components/AddToCartButton.tsx`, `components/ProductGallery.tsx`, `components/ReviewForm.tsx` **Client**
-- [ ] Category Listing — `app/categories/page.tsx` — **Server**
-- [ ] Products by Category — `app/categories/[slug]/page.tsx` — **Server**
-- [ ] Brand Listing — `app/brands/page.tsx` — **Server**
+- [ ] Home Page — `app/page.jsx` (**Server** SEO) + `components/home/FeaturedProducts.jsx` (**Client**)
+- [ ] Product Listing — `app/products/page.jsx` (**Server** SEO) + `components/products/ProductFilters.jsx` (**Client**)
+- [ ] Product Details — `app/products/[slug]/page.jsx` (**Server** SEO) + `components/products/AddToCartButton.jsx`, `components/products/ProductGallery.jsx`, `components/reviews/ReviewForm.jsx` (**Client**)
+- [ ] Category Listing — `app/categories/page.jsx` (**Server** SEO)
+- [ ] Products by Category — `app/categories/[slug]/page.jsx` (**Server** SEO)
+- [ ] Brand Listing — `app/brands/page.jsx` (**Server** SEO)
 
 ### Cart & Wishlist
-- [ ] Cart page — `app/cart/page.tsx` — **Client** (entire page, driven by Zustand `useCartStore`)
-- [ ] Wishlist page — `app/wishlist/page.tsx` — **Client** (Zustand `useWishlistStore`)
-
-### Checkout
-- [ ] Checkout (address, summary, coupon, mock payment) — `app/checkout/page.tsx` — **Client** (multi-step form state)
-
-### Orders
-- [ ] My Orders (list) — `app/orders/page.tsx` — **Server**
-- [ ] Order Details — `app/orders/[id]/page.tsx` — **Server** + `components/CancelOrderButton.tsx` **Client**
+- [ ] Cart page — `app/cart/page.jsx` (**Server** SEO) + `components/cart/CartContainer.jsx` (**Client**, driven by Zustand)
+- [ ] Wishlist page — `app/wishlist/page.jsx` (**Server** SEO) + `components/wishlist/WishlistContainer.jsx` (**Client**, driven by Zustand)
 
 ---
 
 ## SECTION B — Admin panel screens
-> All under `app/admin/` — protect this whole segment with `middleware.js` checking `role === 'ADMIN'`.
+> All under `app/admin/` — protected by `middleware.js` checking `role === 'ADMIN'`.
 
-- [ ] Admin Dashboard (stats: orders, revenue, users, products) — `app/admin/page.tsx` — **Server**
-- [ ] Manage Users — `app/admin/users/page.tsx` — **Server** table + `components/admin/UserActionsModal.tsx` **Client**
-- [ ] Manage Products — `app/admin/products/page.tsx` — **Server** table + `components/admin/ProductForm.tsx` **Client**
-- [ ] Manage Categories — `app/admin/categories/page.tsx` — **Server** table + `components/admin/CategoryForm.tsx` **Client**
-- [ ] Manage Brands — `app/admin/brands/page.tsx` — **Server** table + `components/admin/BrandForm.tsx` **Client**
-- [ ] Manage Orders — `app/admin/orders/page.tsx` — **Server** table + `components/admin/OrderStatusUpdate.tsx` **Client**
-- [ ] Manage Coupons — `app/admin/coupons/page.tsx` — **Server** table + `components/admin/CouponForm.tsx` **Client**
-- [ ] Manage Reviews — `app/admin/reviews/page.tsx` — **Server** table + `components/admin/ReviewModeration.tsx` **Client**
+- [ ] Admin Dashboard (stats/overview) — `app/admin/page.jsx` (**Server** SEO)
+- [ ] Manage Products — `app/admin/products/page.jsx` (**Server** SEO) + `components/admin/ProductForm.jsx` (**Client**)
+- [ ] Manage Categories — `app/admin/categories/page.jsx` (**Server** SEO) + `components/admin/CategoryForm.jsx` (**Client**)
+- [ ] Manage Brands — `app/admin/brands/page.jsx` (**Server** SEO) + `components/admin/BrandForm.jsx` (**Client**)
 
 ---
 
 ## Recommended build order
-1. Auth screens (nothing else works without login)
+1. ~~Auth screens (nothing else works without login)~~ (DONE)
 2. Product Listing + Details + Category + Brand (core browsing)
 3. Cart + Wishlist
-4. Checkout + Orders
-5. Account/Profile/Address
-6. Admin panel last (needs all the data models already working)
+4. Account/Profile/Address
+5. Admin panel last (needs all the data models already working)
 
 ## Naming convention reminder
-Route groups like `(auth)` don't appear in the URL — `app/(auth)/login/page.tsx` still resolves to `/login`. Use this to keep auth pages visually/structurally grouped without polluting the URL.
+- **Pages**: `.jsx` (Server Components by default, handle layout and SEO `metadata`).
+- **Logic**: `.js` (hooks, utilities, services).
+- **UI**: `.jsx` (Client Components containing user interaction, forms, Zustand, UI libraries like Shadcn).
+- **Routes**: Route groups like `(auth)` don't appear in the URL.

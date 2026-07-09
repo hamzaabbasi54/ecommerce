@@ -4,7 +4,7 @@ import { jwtVerify } from 'jose';
 // Convert the secret to a Uint8Array as required by jose
 const secret = new TextEncoder().encode(process.env.JWT_SECRET);
 
-export default async function proxy(request) {
+export default async function middleware(request) {
   // 1. Read the token cookie from the incoming request
   const token = request.cookies.get('token')?.value;
 
@@ -19,7 +19,7 @@ export default async function proxy(request) {
 
     // 4. Check if the authenticated user has the 'ADMIN' role
     if (payload.role !== 'ADMIN') {
-      // If they are a normal user, redirect them (e.g. to login or home)
+      // If they are a normal user, redirect them
       return NextResponse.redirect(new URL('/login', request.url));
     }
 
