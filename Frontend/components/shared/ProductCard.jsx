@@ -23,7 +23,7 @@ export default function ProductCard({ product }) {
   return (
     <Link href={`/products/${product.id}`} className="group block h-full">
       <Card className="h-full border border-border bg-card hover:tech-shadow transition-shadow duration-300 flex flex-col overflow-hidden rounded-md">
-        
+
         {/* Image Container */}
         <div className="relative aspect-square w-full bg-surface-container-low flex items-center justify-center p-6 overflow-hidden">
           {product.discountPrice && (
@@ -33,8 +33,8 @@ export default function ProductCard({ product }) {
           )}
           {/* We're using a standard img tag here, but in Next.js next/image is better for performance. We'd use next/image if we had configured domains. */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img 
-            src={product.images?.[0] || 'https://via.placeholder.com/400?text=Product'} 
+          <img
+            src={product.images?.[0] || 'https://via.placeholder.com/400?text=Product'}
             alt={product.name}
             className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500"
           />
@@ -62,8 +62,8 @@ export default function ProductCard({ product }) {
 
         {/* Footer Actions */}
         <CardFooter className="p-4 pt-0">
-          <Button 
-            variant="secondary" 
+          <Button
+            variant="secondary"
             className="w-full bg-surface-container-high hover:bg-primary hover:text-on-primary transition-colors duration-300 border-none"
             onClick={handleAddToCart}
             disabled={loading || product.stock < 1}

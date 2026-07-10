@@ -15,7 +15,8 @@ axiosInstance.interceptors.response.use(
   (error) => {
     // 1. Handle 401 Unauthorized globally
     if (error.response && error.response.status === 401) {
-      if (typeof window !== 'undefined') {
+      // Don't redirect if we are already on the login API endpoint
+      if (typeof window !== 'undefined' && !error.config.url.includes('/api/auth/login')) {
         window.location.href = '/login';
       }
     }

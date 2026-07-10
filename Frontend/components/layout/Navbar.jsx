@@ -18,13 +18,20 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import useAuthStore from '@/context/useAuthStore';
 import useCartStore from '@/hooks/useCart';
+import useWishlistStore from '@/hooks/useWishlist';
 
 export default function Navbar() {
   const router = useRouter();
-  const { user, isAuthenticated, logout } = useAuthStore();
+  const { user, isAuthenticated, logout, initialize } = useAuthStore();
   const { cart, fetchCart } = useCartStore();
+  const { wishlist, fetchWishlist } = useWishlistStore();
   const [isScrolled, setIsScrolled] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Initialize auth state on app load
+  useEffect(() => {
+    initialize();
+  }, [initialize]);
 
   // Handle sticky scroll effect
   useEffect(() => {
@@ -35,14 +42,16 @@ export default function Navbar() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Fetch cart on mount if authenticated
+  // Fetch cart and wishlist on mount if authenticated
   useEffect(() => {
     if (isAuthenticated) {
       fetchCart();
+      fetchWishlist();
     }
-  }, [isAuthenticated, fetchCart]);
+  }, [isAuthenticated, fetchCart, fetchWishlist]);
 
   const cartItemsCount = cart?.items?.reduce((total, item) => total + item.quantity, 0) || 0;
+  const wishlistItemsCount = wishlist?.length || 0;
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -76,7 +85,6 @@ export default function Navbar() {
           <nav className="flex items-center gap-6 text-sm font-medium text-muted-foreground">
             <Link href="/products" className="hover:text-foreground transition-colors">Shop</Link>
             <Link href="/products?sale=true" className="hover:text-foreground transition-colors">Deals</Link>
-            <Link href="/support" className="hover:text-foreground transition-colors">Support</Link>
           </nav>
           
           <form onSubmit={handleSearch} className="flex-1 relative max-w-sm ml-4">
@@ -97,9 +105,9 @@ export default function Navbar() {
           {/* User Account Dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger className={buttonVariants({ variant: 'ghost', size: 'icon', className: 'rounded-full' })}>
-              {isAuthenticated && user?.avatarUrl ? (
+              {isAuthenticated && user?.profileImage ? (
                 <Avatar className="h-7 w-7">
-                  <AvatarImage src={user.avatarUrl} alt={user.name} />
+                  <AvatarImage src={user.profileImage} alt={user.name} />
                   <AvatarFallback>{user.name?.charAt(0)}</AvatarFallback>
                 </Avatar>
               ) : (
@@ -146,8 +154,15 @@ export default function Navbar() {
           </DropdownMenu>
 
           {/* Wishlist */}
-          <Button variant="ghost" size="icon" onClick={() => router.push('/wishlist')}>
+          <Button variant="ghost" size="icon" className="relative" onClick={() => router.push('/wishlist')}>
             <Heart className="h-5 w-5" />
+            {wishlistItemsCount > 0 && (
+              <Badge 
+                className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-[10px] bg-primary text-on-primary rounded-full"
+              >
+                {wishlistItemsCount > 99 ? '99+' : wishlistItemsCount}
+              </Badge>
+            )}
           </Button>
 
           {/* Cart */}

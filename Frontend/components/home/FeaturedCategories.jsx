@@ -39,7 +39,7 @@ export default function FeaturedCategories({ categories }) {
           {/* Main Large Category */}
           {mainCategory && (
             <Link 
-              href={`/categories/${mainCategory.slug}`} 
+              href={`/products?category=${mainCategory.slug}`} 
               className="lg:col-span-2 lg:row-span-2 group relative overflow-hidden rounded-md bg-surface-container-low border border-border"
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -63,7 +63,7 @@ export default function FeaturedCategories({ categories }) {
             {subCategories.map((cat, index) => (
               <Link 
                 key={cat.id}
-                href={`/categories/${cat.slug}`} 
+                href={`/products?category=${cat.slug}`} 
                 className="group relative flex-1 overflow-hidden rounded-md bg-surface-container-low border border-border"
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}

@@ -1,37 +1,75 @@
 import { NextResponse } from 'next/server';
 import { jwtVerify } from 'jose';
 
-// Convert the secret to a Uint8Array as required by jose
-const secret = new TextEncoder().encode(process.env.JWT_SECRET);
+// 1. Define Route Categories
+const protectedRoutes = ['/profile', '/checkout', '/wishlist', '/orders'];
+const authRoutes = ['/login', '/register', '/forgot-password', '/reset-password'];
+const adminRoutes = ['/admin'];
 
-export default async function middleware(request) {
-  // 1. Read the token cookie from the incoming request
+export async function proxy(request) {
+  const { pathname } = request.nextUrl;
   const token = request.cookies.get('token')?.value;
 
-  // 2. If no token is found, redirect immediately to login
-  if (!token) {
-    return NextResponse.redirect(new URL('/login', request.url));
+  let decodedToken = null;
+
+  // 2. Verify Token if it exists
+  if (token) {
+    try {
+      const secret = new TextEncoder().encode(process.env.JWT_SECRET);
+      const { payload } = await jwtVerify(token, secret);
+      decodedToken = payload;
+    } catch (error) {
+      // Token is invalid or expired
+      const response = NextResponse.redirect(new URL('/login', request.url));
+      response.cookies.delete('token');
+      return response;
+    }
   }
 
-  try {
-    // 3. Verify the token using jose (Edge-compatible)
-    const { payload } = await jwtVerify(token, secret);
+  // 3. Handle Guest-Only Auth Routes (Redirect logged-in users away from /login)
+  const isAuthRoute = authRoutes.some((route) => pathname.startsWith(route));
+  if (isAuthRoute) {
+    if (decodedToken) {
+      return NextResponse.redirect(new URL('/', request.url));
+    }
+    return NextResponse.next();
+  }
 
-    // 4. Check if the authenticated user has the 'ADMIN' role
-    if (payload.role !== 'ADMIN') {
-      // If they are a normal user, redirect them
+  // 4. Handle Protected User Routes (Redirect guests to /login)
+  const isProtectedRoute = protectedRoutes.some((route) => pathname.startsWith(route));
+  if (isProtectedRoute) {
+    if (!decodedToken) {
       return NextResponse.redirect(new URL('/login', request.url));
     }
-
-    // 5. If verification passes and they are an admin, allow the request to proceed
     return NextResponse.next();
-  } catch (error) {
-    // Verification failed (token is tampered, expired, or invalid)
-    return NextResponse.redirect(new URL('/login', request.url));
   }
+
+  // 5. Handle Admin Routes (Redirect guests to login, non-admins to home)
+  const isAdminRoute = adminRoutes.some((route) => pathname.startsWith(route));
+  if (isAdminRoute) {
+    if (!decodedToken) {
+      return NextResponse.redirect(new URL('/login', request.url));
+    }
+    if (decodedToken.role !== 'ADMIN') {
+      return NextResponse.redirect(new URL('/', request.url));
+    }
+    return NextResponse.next();
+  }
+
+  // 6. Allow all other public routes (e.g. /, /products, /categories)
+  return NextResponse.next();
 }
 
-// 6. Protect ONLY the routes under /admin
+// Specify exactly which paths the middleware should run on to optimize performance
 export const config = {
-  matcher: ['/admin/:path*'],
+  matcher: [
+    /*
+     * Match all request paths except for the ones starting with:
+     * - api (API routes are protected by helper functions instead)
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     */
+    '/((?!api|_next/static|_next/image|favicon.ico).*)',
+  ],
 };

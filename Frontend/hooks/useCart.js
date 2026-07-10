@@ -68,6 +68,21 @@ const useCartStore = create((set, get) => ({
       set({ loading: false });
     }
   },
+
+  clearCart: async () => {
+    set({ loading: true, error: null });
+    try {
+      // Since the backend order creation already clears the cart items in the database,
+      // we just need to re-fetch the cart to sync our local state, or reset it directly.
+      await get().fetchCart();
+      return { success: true };
+    } catch (err) {
+      set({ error: 'Failed to clear cart state' });
+      return null;
+    } finally {
+      set({ loading: false });
+    }
+  },
 }));
 
 export default useCartStore;

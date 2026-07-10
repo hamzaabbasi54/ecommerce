@@ -6,13 +6,14 @@ import { saveUploadedFile } from '@/lib/upload';
 const generateSlug = (name) =>
   name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
 
-// PUT /api/admin/brands/:id
-export async function PUT(request, { params }) {
+// PUT /api/admin/brands/[id]
+export async function PUT(request, props) {
   try {
+    const params = await props.params;
     await verifyAdmin(request);
-    const { id } = await params;
+    const { id } = params;
+    
     const formData = await request.formData();
-
     const name = formData.get('name');
     const description = formData.get('description');
 
@@ -21,58 +22,55 @@ export async function PUT(request, { params }) {
       return NextResponse.json({ success: false, message: 'Brand not found' }, { status: 404 });
     }
 
-    if (name && name !== brand.name) {
-      const existingBrand = await prisma.brand.findUnique({ where: { name } });
-      if (existingBrand) {
-        return NextResponse.json({ success: false, message: 'Brand with this name already exists' }, { status: 409 });
-      }
-    }
+    const updateData = { description: description || null };
 
-    let slug;
     if (name && name !== brand.name) {
-      slug = generateSlug(name);
+      updateData.name = name;
+      let slug = generateSlug(name);
       const existingSlug = await prisma.brand.findUnique({ where: { slug } });
       if (existingSlug && existingSlug.id !== id) slug = `${slug}-${Date.now()}`;
+      updateData.slug = slug;
     }
 
     const logoFile = formData.get('logo');
-    const logo = logoFile instanceof File ? await saveUploadedFile(logoFile, 'brands') : undefined;
+    if (logoFile instanceof File) {
+      updateData.logo = await saveUploadedFile(logoFile, 'brands');
+    }
 
     const updatedBrand = await prisma.brand.update({
       where: { id },
-      data: {
-        ...(name && { name }),
-        ...(slug && { slug }),
-        ...(logo && { logo }),
-        ...(description !== undefined && { description: description || null }),
-      },
+      data: updateData,
     });
 
-    return NextResponse.json({ success: true, message: 'Brand updated successfully', data: updatedBrand });
+    return NextResponse.json({ success: true, message: 'Brand updated', data: updatedBrand });
   } catch (error) {
     if (error instanceof Response) return error;
-    console.error('Error in updateBrand:', error.message);
+    console.error('Error updating brand:', error.message);
     return NextResponse.json({ success: false, message: 'Internal Server Error' }, { status: 500 });
   }
 }
 
-// DELETE /api/admin/brands/:id (Hard Delete)
-export async function DELETE(request, { params }) {
+// DELETE /api/admin/brands/[id]
+export async function DELETE(request, props) {
   try {
+    const params = await props.params;
     await verifyAdmin(request);
-    const { id } = await params;
+    const { id } = params;
 
-    const brand = await prisma.brand.findUnique({ where: { id } });
+    const brand = await prisma.brand.findUnique({ 
+      where: { id },
+      include: { products: true }
+    });
+    
     if (!brand) {
       return NextResponse.json({ success: false, message: 'Brand not found' }, { status: 404 });
     }
 
-    const productCount = await prisma.product.count({ where: { brandId: id } });
-    if (productCount > 0) {
-      return NextResponse.json(
-        { success: false, message: `Cannot delete brand. ${productCount} product(s) are still linked to it. Remove or reassign them first.` },
-        { status: 400 }
-      );
+    if (brand.products.length > 0) {
+      return NextResponse.json({ 
+        success: false, 
+        message: 'Cannot delete brand that has products. Please delete or reassign them first.' 
+      }, { status: 400 });
     }
 
     await prisma.brand.delete({ where: { id } });
@@ -80,7 +78,7 @@ export async function DELETE(request, { params }) {
     return NextResponse.json({ success: true, message: 'Brand deleted successfully' });
   } catch (error) {
     if (error instanceof Response) return error;
-    console.error('Error in deleteBrand:', error.message);
+    console.error('Error deleting brand:', error.message);
     return NextResponse.json({ success: false, message: 'Internal Server Error' }, { status: 500 });
   }
 }

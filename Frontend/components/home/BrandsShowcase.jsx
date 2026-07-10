@@ -17,26 +17,25 @@ export default function BrandsShowcase({ brands }) {
         </div>
 
         {/* Brands Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
+        <div className="flex flex-wrap justify-center gap-6">
           {brands.map((brand, index) => (
-            <Link key={brand.id} href={`/brands/${brand.slug}`}>
-              <Card 
-                className="h-32 flex items-center justify-center p-6 bg-surface-container-low border border-border hover:border-primary/50 hover:tech-shadow transition-all duration-300 group cursor-pointer"
-              >
-                {brand.logoUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img 
-                    src={brand.logoUrl} 
-                    alt={brand.name} 
-                    className="max-h-full max-w-full object-contain filter grayscale opacity-70 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-300"
-                  />
-                ) : (
-                  <span className="font-bold text-lg tracking-wider text-muted-foreground group-hover:text-primary transition-colors">
-                    {brand.name.toUpperCase()}
-                  </span>
-                )}
-              </Card>
-            </Link>
+            <Card 
+              key={brand.id}
+              className="w-40 h-32 flex items-center justify-center p-6 bg-surface-container-low border border-border hover:border-primary/50 transition-all duration-300 group"
+            >
+              {brand.logoUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img 
+                  src={brand.logoUrl} 
+                  alt={brand.name} 
+                  className="max-h-full max-w-full object-contain filter grayscale opacity-70 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-300"
+                />
+              ) : (
+                <span className="font-bold text-lg tracking-wider text-muted-foreground group-hover:text-primary transition-colors">
+                  {brand.name.toUpperCase()}
+                </span>
+              )}
+            </Card>
           ))}
         </div>
       </div>

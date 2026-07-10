@@ -8,6 +8,22 @@ const useAuthStore = create((set) => ({
   // Action to set the user (called after successful login/register or profile fetch)
   setUser: (user) => set({ user, isAuthenticated: !!user }),
 
+  // Initialize auth state on mount by hitting the profile endpoint
+  initialize: async () => {
+    try {
+      // Inline fetch to avoid circular dependencies or missing services
+      const res = await fetch('/api/user/profile');
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success) {
+          set({ user: data.data, isAuthenticated: true });
+        }
+      }
+    } catch (error) {
+      console.error('Failed to initialize auth', error);
+    }
+  },
+
   // Action to log the user out
   logout: async () => {
     try {
