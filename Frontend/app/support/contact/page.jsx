@@ -9,7 +9,7 @@ export default function ContactPage() {
   return (
     <div className="container mx-auto px-4 py-12 max-w-5xl">
       <h1 className="text-3xl font-bold mb-2 text-foreground">Contact Us</h1>
-      <p className="text-muted-foreground mb-12">We'd love to hear from you. Please fill out this form or get in touch using the information below.</p>
+      <p className="text-muted-foreground mb-12">We&apos;d love to hear from you. Please fill out this form or get in touch using the information below.</p>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
         <div className="space-y-6 bg-surface-container-lowest p-8 rounded-xl shadow-sm border border-border">

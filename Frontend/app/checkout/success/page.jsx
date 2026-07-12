@@ -18,14 +18,14 @@ function OrderSuccessContent() {
         Thank you for your order!
       </h1>
       
-      <p className="font-body-lg text-body-lg text-secondary mb-xl">
+      <p className="font-body-lg text-body-lg text-muted-foreground mb-xl">
         Order <strong className="text-on-background">#{orderId.substring(0, 8).toUpperCase()}</strong> has been placed successfully.
       </p>
 
       <div className="bg-surface-container-lowest border border-surface-variant p-lg rounded-lg w-full max-w-[450px] mb-xl shadow-sm text-left">
         <h3 className="font-h4 text-h4 text-on-background mb-xs">What's Next?</h3>
-        <p className="font-body-md text-body-md text-secondary">
-          You will receive an order confirmation email with details of your order and a link to track its progress.
+        <p className="font-body-md text-body-md text-muted-foreground">
+          We&apos;ll send an order confirmation email with details of your order and a link to track its progress.
         </p>
       </div>
 

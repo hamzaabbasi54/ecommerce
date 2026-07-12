@@ -28,6 +28,7 @@ export default function AddressManager() {
   };
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchAddresses();
   }, []);
 
@@ -196,7 +197,7 @@ export default function AddressManager() {
           {addresses.length === 0 ? (
             <div className="col-span-full py-10 text-center bg-surface-container-lowest border border-dashed border-border rounded-xl">
               <span className="material-symbols-outlined text-[48px] text-muted-foreground mb-2">location_off</span>
-              <p className="text-muted-foreground">You haven't saved any addresses yet.</p>
+              <p className="text-muted-foreground">You haven&apos;t saved any addresses yet.</p>
             </div>
           ) : (
             addresses.map(addr => (

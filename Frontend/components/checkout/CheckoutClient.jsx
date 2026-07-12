@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -26,6 +26,13 @@ export default function CheckoutClient() {
   const { cart, loading: cartLoading, clearCart } = useCartStore();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
+  const isSubmittingRef = useRef(false);
+
+  // Coupon state
+  const [couponCode, setCouponCode] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState(null);
+  const [couponError, setCouponError] = useState("");
+  const [couponLoading, setCouponLoading] = useState(false);
 
   const {
     register,
@@ -35,7 +42,7 @@ export default function CheckoutClient() {
     resolver: zodResolver(checkoutSchema),
     defaultValues: {
       country: "United States",
-      paymentMethod: "credit_card",
+      paymentMethod: "cod",
     }
   });
 
@@ -48,10 +55,52 @@ export default function CheckoutClient() {
   });
 
   const taxRate = 0.08;
-  const tax = subtotal * taxRate;
-  const total = subtotal + tax;
+  const discount = appliedCoupon ? appliedCoupon.discountAmount : 0;
+  const taxableAmount = subtotal - discount;
+  const tax = Number((taxableAmount * taxRate).toFixed(2));
+  const total = taxableAmount + tax;
+
+  // Apply coupon handler
+  const handleApplyCoupon = async () => {
+    if (!couponCode.trim()) return;
+    
+    setCouponError("");
+    setCouponLoading(true);
+
+    try {
+      const response = await fetch('/api/coupons/validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: couponCode.trim(), subtotal })
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.message || 'Invalid coupon');
+      }
+
+      setAppliedCoupon(result.data);
+      setCouponError("");
+    } catch (error) {
+      setCouponError(error.message);
+      setAppliedCoupon(null);
+    } finally {
+      setCouponLoading(false);
+    }
+  };
+
+  // Remove coupon handler
+  const handleRemoveCoupon = () => {
+    setAppliedCoupon(null);
+    setCouponCode("");
+    setCouponError("");
+  };
 
   const onSubmit = async (data) => {
+    // Guard against double submission
+    if (isSubmittingRef.current) return;
+    isSubmittingRef.current = true;
     setIsSubmitting(true);
     setSubmitError("");
     
@@ -70,7 +119,8 @@ export default function CheckoutClient() {
             country: data.country
           },
           email: data.email,
-          paymentMethod: data.paymentMethod
+          paymentMethod: data.paymentMethod,
+          couponCode: appliedCoupon ? appliedCoupon.code : null
         })
       });
 
@@ -87,6 +137,7 @@ export default function CheckoutClient() {
       setSubmitError(error.message);
     } finally {
       setIsSubmitting(false);
+      isSubmittingRef.current = false;
     }
   };
 
@@ -226,68 +277,21 @@ export default function CheckoutClient() {
               </select>
               {errors.country && <p className="text-error text-sm mt-1">{errors.country.message}</p>}
             </div>
-
-            <div className="mt-lg pt-md border-t border-surface-variant flex items-center gap-sm">
-              <input defaultChecked className="w-4 h-4 text-primary border-outline-variant rounded accent-primary cursor-pointer" id="sameAsBilling" type="checkbox" />
-              <label className="font-body-md text-body-md text-on-background cursor-pointer" htmlFor="sameAsBilling">Billing address is same as shipping</label>
-            </div>
           </section>
 
-          {/* Payment Section */}
+          {/* Payment Section - COD Only */}
           <section className="bg-surface-container-lowest border border-surface-variant p-lg rounded-lg">
             <h2 className="font-h4 text-h4 text-on-background mb-md">Payment Method</h2>
-            <p className="font-label-sm text-label-sm text-muted-foreground mb-md flex items-center gap-xs">
-              <span className="material-symbols-outlined text-[16px]" style={{fontVariationSettings: "'FILL' 1"}}>lock</span>
-              All transactions are secure and encrypted.
-            </p>
-            <div className="flex flex-col gap-sm">
-              
-              {/* Credit Card Option */}
-              <label className="flex items-center justify-between p-md border border-primary rounded bg-surface-container cursor-pointer transition-colors">
-                <div className="flex items-center gap-sm">
-                  <input 
-                    {...register("paymentMethod")} 
-                    value="credit_card"
-                    className="w-4 h-4 text-primary accent-primary cursor-pointer" 
-                    type="radio"
-                  />
-                  <span className="font-body-md text-body-md font-medium text-on-background">Credit Card</span>
-                </div>
-                <div className="flex gap-xs text-muted-foreground">
-                  <span className="material-symbols-outlined" style={{fontVariationSettings: "'FILL' 1"}}>credit_card</span>
-                </div>
-              </label>
-
-              {/* CC Details (Dummy for visual purposes) */}
-              <div className="p-md border border-t-0 border-outline-variant rounded-b bg-surface-container-lowest -mt-sm pt-lg">
-                <div className="mb-md">
-                  <label className="block font-label-sm text-label-sm text-on-surface-variant mb-xs" htmlFor="cardNumber">Card Number</label>
-                  <input className="w-full bg-surface border border-outline-variant rounded p-sm font-body-md text-body-md text-on-background transition-colors" id="cardNumber" placeholder="0000 0000 0000 0000" type="text" />
-                </div>
-                <div className="grid grid-cols-2 gap-md">
-                  <div>
-                    <label className="block font-label-sm text-label-sm text-on-surface-variant mb-xs" htmlFor="expDate">Expiration Date (MM/YY)</label>
-                    <input className="w-full bg-surface border border-outline-variant rounded p-sm font-body-md text-body-md text-on-background transition-colors" id="expDate" placeholder="MM / YY" type="text" />
-                  </div>
-                  <div>
-                    <label className="block font-label-sm text-label-sm text-on-surface-variant mb-xs" htmlFor="cvv">Security Code</label>
-                    <input className="w-full bg-surface border border-outline-variant rounded p-sm font-body-md text-body-md text-on-background transition-colors" id="cvv" placeholder="CVV" type="text" />
-                  </div>
+            <input type="hidden" {...register("paymentMethod")} value="cod" />
+            <div className="flex items-center justify-between p-md border border-primary rounded bg-surface-container">
+              <div className="flex items-center gap-sm">
+                <span className="material-symbols-outlined text-[22px] text-primary" style={{fontVariationSettings: "'FILL' 1"}}>local_shipping</span>
+                <div>
+                  <span className="font-body-md text-body-md font-medium text-on-background">Cash on Delivery (COD)</span>
+                  <p className="font-label-sm text-label-sm text-muted-foreground mt-xs">Pay with cash when your order is delivered.</p>
                 </div>
               </div>
-
-              {/* PayPal Option */}
-              <label className="flex items-center justify-between p-md border border-outline-variant rounded hover:bg-surface-container-low cursor-pointer transition-colors mt-sm">
-                <div className="flex items-center gap-sm">
-                  <input 
-                    {...register("paymentMethod")}
-                    value="paypal"
-                    className="w-4 h-4 text-primary accent-primary cursor-pointer" 
-                    type="radio" 
-                  />
-                  <span className="font-body-md text-body-md font-medium text-on-background">PayPal</span>
-                </div>
-              </label>
+              <span className="material-symbols-outlined text-primary text-[22px]" style={{fontVariationSettings: "'FILL' 1"}}>check_circle</span>
             </div>
           </section>
         </div>
@@ -328,9 +332,66 @@ export default function CheckoutClient() {
             </div>
 
             {/* Coupon Code */}
-            <div className="flex gap-sm mb-lg border-y border-surface-variant py-md">
-              <input className="flex-grow bg-surface border border-outline-variant rounded p-sm font-body-md text-body-md text-on-background transition-colors" placeholder="Discount code" type="text" />
-              <button type="button" className="bg-surface-container-high text-on-surface px-md py-sm rounded font-button text-button hover:bg-surface-dim transition-colors">Apply</button>
+            <div className="mb-lg border-y border-surface-variant py-md">
+              {appliedCoupon ? (
+                <div className="flex items-center justify-between p-sm bg-primary/5 border border-primary/20 rounded">
+                  <div className="flex items-center gap-sm">
+                    <span className="material-symbols-outlined text-primary text-[18px]" style={{fontVariationSettings: "'FILL' 1"}}>confirmation_number</span>
+                    <div>
+                      <span className="font-body-md text-body-md font-medium text-on-background">{appliedCoupon.code}</span>
+                      <p className="font-label-sm text-label-sm text-primary">
+                        {appliedCoupon.discountType === 'percentage' 
+                          ? `${appliedCoupon.discountValue}% off` 
+                          : `$${appliedCoupon.discountValue.toFixed(2)} off`}
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleRemoveCoupon}
+                    className="text-muted-foreground hover:text-error transition-colors p-xs"
+                    title="Remove coupon"
+                  >
+                    <span className="material-symbols-outlined text-[18px]">close</span>
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <div className="flex gap-sm">
+                    <input
+                      className="flex-grow bg-surface border border-outline-variant rounded p-sm font-body-md text-body-md text-on-background transition-colors"
+                      placeholder="Discount code"
+                      type="text"
+                      value={couponCode}
+                      onChange={(e) => {
+                        setCouponCode(e.target.value);
+                        if (couponError) setCouponError("");
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          handleApplyCoupon();
+                        }
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={handleApplyCoupon}
+                      disabled={couponLoading || !couponCode.trim()}
+                      className="bg-surface-container-high text-on-surface px-md py-sm rounded font-button text-button hover:bg-surface-dim transition-colors disabled:opacity-50 flex items-center gap-xs"
+                    >
+                      {couponLoading && <Loader2 className="w-4 h-4 animate-spin" />}
+                      Apply
+                    </button>
+                  </div>
+                  {couponError && (
+                    <p className="text-error font-label-sm text-label-sm mt-sm flex items-center gap-xs">
+                      <span className="material-symbols-outlined text-[14px]">error</span>
+                      {couponError}
+                    </p>
+                  )}
+                </>
+              )}
             </div>
 
             {/* Breakdown */}
@@ -339,6 +400,12 @@ export default function CheckoutClient() {
                 <span>Subtotal</span>
                 <span className="text-on-background">${subtotal.toFixed(2)}</span>
               </div>
+              {discount > 0 && (
+                <div className="flex justify-between items-center font-body-md text-body-md text-green-600">
+                  <span>Discount</span>
+                  <span>-${discount.toFixed(2)}</span>
+                </div>
+              )}
               <div className="flex justify-between items-center font-body-md text-body-md text-on-surface-variant">
                 <span>Shipping</span>
                 <span className="text-primary font-medium">Free</span>

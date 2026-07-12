@@ -22,6 +22,17 @@
   --color-error-container: #ffdad6;
   --color-on-error-container: #93000a;
 
+  /* Text / Background semantic colors */
+  --color-on-background: #1a1b1f;
+  --color-on-primary: #ffffff;
+  --color-on-secondary: #ffffff;
+  --color-surface-container: #f0eef4;
+  --color-surface-container-low: #f5f3f9;
+  --color-surface-container-high: #eae8ee;
+  --color-surface-dim: #dbd9df;
+  --color-surface-tint: #003da5;
+  --color-surface-variant: #e0e0e8;
+
   /* Fonts */
   --font-h1: Inter, sans-serif;
   --font-h2: Inter, sans-serif;

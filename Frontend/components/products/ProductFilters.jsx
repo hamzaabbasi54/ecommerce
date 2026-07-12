@@ -34,7 +34,20 @@ export default function ProductFilters({ categories, brands }) {
   );
 
   const applyFilter = (name, value) => {
-    router.push('/products?' + createQueryString(name, value));
+    const params = new URLSearchParams(searchParams.toString());
+    if (value) {
+      params.set(name, value);
+    } else {
+      params.delete(name);
+    }
+    // When selecting a specific category, clear brand filter (and vice versa)
+    // so the user sees all products for their selection
+    if (name === 'category' && value) {
+      params.delete('brand');
+    } else if (name === 'brand' && value) {
+      params.delete('category');
+    }
+    router.push('/products?' + params.toString());
   };
 
   const applyPriceFilter = (e) => {

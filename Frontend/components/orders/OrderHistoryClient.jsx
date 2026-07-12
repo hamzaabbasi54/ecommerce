@@ -55,7 +55,7 @@ export default function OrderHistoryClient() {
       <main className="flex-grow w-full max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-xl flex flex-col items-center justify-center min-h-[50vh] text-center">
         <span className="material-symbols-outlined text-[64px] text-outline mb-md">receipt_long</span>
         <h2 className="font-h3 text-h3 text-on-background mb-sm">No orders yet</h2>
-        <p className="font-body-md text-body-md text-muted-foreground mb-lg">Looks like you haven't placed any orders. Discover our latest engineered excellence.</p>
+        <p className="font-body-md text-body-md text-muted-foreground mb-lg">Looks like you haven&apos;t placed any orders. Discover our latest engineered excellence.</p>
         <Link href="/products" className="bg-primary text-on-primary px-lg py-md rounded font-button text-button">
           Browse Products
         </Link>

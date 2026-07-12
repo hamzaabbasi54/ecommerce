@@ -79,7 +79,7 @@ export default function CartClient() {
           </div>
           <h3 className="font-h3 text-h3 text-on-surface mb-sm">Your cart is empty</h3>
           <p className="font-body-md text-body-md text-on-surface-variant mb-lg">
-            Looks like you haven't added anything to your cart yet. Discover our latest engineered excellence.
+            Looks like you haven&apos;t added anything to your cart yet. Discover our latest engineered excellence.
           </p>
           <Link href="/products" className="px-lg h-12 border border-outline-variant text-on-surface font-button text-button rounded-lg hover:bg-surface-variant transition-colors inline-flex items-center justify-center">
             Browse Products

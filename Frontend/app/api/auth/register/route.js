@@ -2,17 +2,30 @@ import { NextResponse } from 'next/server';
 import bcrypt from 'bcrypt';
 import prisma from '@/lib/prisma';
 import { generateToken, getCookieOptions } from '@/lib/auth';
+import { z } from 'zod';
+
+const registerSchema = z.object({
+  name: z.string().min(2, "Name must be at least 2 characters"),
+  email: z.string().email("Invalid email address"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
+  phone: z.string().min(10, "Phone number is too short"),
+  role: z.enum(['USER', 'ADMIN']).optional().default('USER'),
+});
 
 export async function POST(request) {
   try {
-    const { name, email, password, phone, role } = await request.json();
-
-    if (!name || !email || !password || !phone) {
+    const body = await request.json();
+    
+    // Validate with Zod
+    const validationResult = registerSchema.safeParse(body);
+    if (!validationResult.success) {
       return NextResponse.json(
-        { success: false, message: 'All fields are required' },
+        { success: false, message: validationResult.error.errors[0].message },
         { status: 400 }
       );
     }
+
+    const { name, email, password, phone, role } = validationResult.data;
 
     const exists = await prisma.user.findUnique({ where: { email } });
     if (exists) {

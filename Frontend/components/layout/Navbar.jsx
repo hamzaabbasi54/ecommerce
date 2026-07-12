@@ -3,8 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Search, User, Heart, ShoppingBag, Menu, LogOut, Settings } from 'lucide-react';
-import { Input } from '@/components/ui/input';
+import { User, Heart, ShoppingBag, Menu, LogOut, Settings } from 'lucide-react';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -26,7 +25,6 @@ export default function Navbar() {
   const { cart, fetchCart } = useCartStore();
   const { wishlist, fetchWishlist } = useWishlistStore();
   const [isScrolled, setIsScrolled] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
 
   // Initialize auth state on app load
   useEffect(() => {
@@ -53,12 +51,7 @@ export default function Navbar() {
   const cartItemsCount = cart?.items?.reduce((total, item) => total + item.quantity, 0) || 0;
   const wishlistItemsCount = wishlist?.length || 0;
 
-  const handleSearch = (e) => {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      router.push(`/products?search=${encodeURIComponent(searchQuery)}`);
-    }
-  };
+
 
   return (
     <header 
@@ -80,23 +73,12 @@ export default function Navbar() {
           </Link>
         </div>
 
-        {/* Center: Desktop Navigation & Search */}
-        <div className="hidden md:flex flex-1 items-center justify-center max-w-2xl px-6 gap-6">
+        {/* Center: Desktop Navigation */}
+        <div className="hidden md:flex flex-1 items-center justify-center px-6">
           <nav className="flex items-center gap-6 text-sm font-medium text-muted-foreground">
             <Link href="/products" className="hover:text-foreground transition-colors">Shop</Link>
             <Link href="/products?sale=true" className="hover:text-foreground transition-colors">Deals</Link>
           </nav>
-          
-          <form onSubmit={handleSearch} className="flex-1 relative max-w-sm ml-4">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              type="search"
-              placeholder="Search products..."
-              className="w-full pl-9 bg-surface-container-low border-none focus-visible:ring-1 focus-visible:ring-primary h-9"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </form>
         </div>
 
         {/* Right: Actions (User, Wishlist, Cart) */}

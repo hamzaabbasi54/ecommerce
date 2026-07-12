@@ -109,7 +109,7 @@ export default function OrderDetailClient({ orderId }) {
 
         {/* Right Column: Order Summary & Info */}
         <div className="lg:col-span-4 flex flex-col gap-lg">
-          <section className="bg-surface-container-lowest border border-surface-variant p-lg rounded-lg lg:sticky lg:top-32">
+          <section className="bg-surface-container-lowest border border-surface-variant p-lg rounded-lg">
             <h2 className="font-h4 text-h4 text-on-background mb-md pb-sm border-b border-surface-variant">Order Summary</h2>
             <div className="flex flex-col gap-sm mb-lg">
               <div className="flex justify-between items-center font-body-md text-body-md text-on-surface-variant">
@@ -154,9 +154,9 @@ export default function OrderDetailClient({ orderId }) {
             <h2 className="font-h4 text-h4 text-on-background mb-md pb-sm border-b border-surface-variant">Payment Method</h2>
             <div className="flex items-center gap-sm font-body-md text-body-md text-on-surface-variant">
               <span className="material-symbols-outlined text-[20px]" style={{fontVariationSettings: "'FILL' 1"}}>
-                {order.paymentMethod === 'paypal' ? 'paypal' : 'credit_card'}
+                {order.paymentMethod === 'cod' ? 'local_shipping' : 'credit_card'}
               </span>
-              <span className="capitalize">{order.paymentMethod.replace('_', ' ')}</span>
+              <span className="capitalize">{order.paymentMethod === 'cod' ? 'Cash on Delivery' : order.paymentMethod.replace('_', ' ')}</span>
             </div>
           </section>
         </div>

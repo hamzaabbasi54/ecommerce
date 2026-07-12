@@ -2,6 +2,7 @@ import prisma from '@/lib/prisma';
 import ProductFilters from '@/components/products/ProductFilters';
 import ProductCard from '@/components/shared/ProductCard';
 import ProductSort from '@/components/products/ProductSort';
+import ProductSearch from '@/components/products/ProductSearch';
 import Link from 'next/link';
 import { ChevronRight } from 'lucide-react';
 
@@ -21,6 +22,7 @@ export default async function ProductsPage(props) {
   const maxPrice = searchParams.maxPrice ? parseFloat(searchParams.maxPrice) : null;
   const sort = searchParams.sort || 'newest';
   const sale = searchParams.sale === 'true';
+  const searchQuery = searchParams.search || null;
 
   // Build the Prisma query
   const where = {
@@ -40,6 +42,13 @@ export default async function ProductsPage(props) {
   }
   if (sale) {
     where.discountPrice = { not: null };
+  }
+  if (searchQuery) {
+    where.OR = [
+      { name: { contains: searchQuery, mode: 'insensitive' } },
+      { brand: { name: { contains: searchQuery, mode: 'insensitive' } } },
+      { category: { name: { contains: searchQuery, mode: 'insensitive' } } },
+    ];
   }
 
   let orderBy = { createdAt: 'desc' };
@@ -72,7 +81,10 @@ export default async function ProductsPage(props) {
           <ChevronRight className="h-4 w-4" />
           <span className="text-foreground font-medium">Shop</span>
         </nav>
-        <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-foreground">All Products</h1>
+        <div className="flex items-center justify-between gap-6">
+          <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-foreground whitespace-nowrap">All Products</h1>
+          <ProductSearch />
+        </div>
       </div>
 
       <div className="flex flex-col md:flex-row gap-12">
