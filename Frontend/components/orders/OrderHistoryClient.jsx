@@ -15,7 +15,9 @@ export default function OrderHistoryClient() {
       try {
         const result = await getMyOrders();
         if (result.success) {
-          setOrders(result.data);
+          // Filter out cancelled orders from the active list view
+          const activeOrders = result.data.filter(order => order.status !== 'cancelled');
+          setOrders(activeOrders);
         } else {
           setError(result.message || "Failed to load orders.");
         }

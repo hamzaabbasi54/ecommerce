@@ -24,7 +24,7 @@ export async function saveUploadedFile(file, destination) {
 
   // Generate unique filename
   const uniqueName = `${Date.now()}-${file.name}`;
-  
+
   // Ensure directory exists
   const uploadDir = path.join(process.cwd(), 'public', 'uploads', destination);
   await mkdir(uploadDir, { recursive: true });

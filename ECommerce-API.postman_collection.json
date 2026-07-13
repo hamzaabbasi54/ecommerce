@@ -1,0 +1,990 @@
+{
+  "info": {
+    "name": "E-Commerce API (Code-Verified)",
+    "_postman_id": "ecommerce-api-verified-v1",
+    "description": "Complete Postman collection built by direct inspection of all Next.js API route files. Auth is HTTP-only cookie based via `token` cookie set by login/register. NO Bearer header is used.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://localhost:3000", "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register User",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/auth/register", "host": ["{{base_url}}"], "path": ["api", "auth", "register"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Test User\",\n  \"email\": \"test@example.com\",\n  \"password\": \"password123\",\n  \"phone\": \"1234567890\"\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "Success (201)",
+              "status": "Created",
+              "code": 201,
+              "body": "{\n  \"success\": true,\n  \"message\": \"User created successfully\",\n  \"data\": { \"id\": \"...\", \"name\": \"Test User\", \"email\": \"test@example.com\", \"role\": \"USER\" }\n}"
+            },
+            {
+              "name": "Validation Error (400) - Zod",
+              "status": "Bad Request",
+              "code": 400,
+              "body": "{\n  \"success\": false,\n  \"message\": \"Password must be at least 6 characters\"\n}"
+            },
+            {
+              "name": "Duplicate Email (400)",
+              "status": "Bad Request",
+              "code": 400,
+              "body": "{\n  \"success\": false,\n  \"message\": \"User already exists\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Register User - Invalid (missing phone)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/auth/register", "host": ["{{base_url}}"], "path": ["api", "auth", "register"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Test\",\n  \"email\": \"bad@example.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "description": "Should return 400 with Zod validation error for missing phone field."
+          }
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Cookie 'token' is automatically set by the server as httpOnly.",
+                  "// Postman's cookie jar will persist it for subsequent requests.",
+                  "pm.test('Login successful', function () {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json.success).to.be.true;",
+                  "  pm.expect(json.data).to.have.property('id');",
+                  "  pm.expect(json.data).to.have.property('role');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/auth/login", "host": ["{{base_url}}"], "path": ["api", "auth", "login"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"test@example.com\",\n  \"password\": \"password123\"\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "Success (200)",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"success\": true,\n  \"message\": \"Login successful\",\n  \"data\": { \"id\": \"...\", \"name\": \"Test User\", \"email\": \"test@example.com\", \"role\": \"USER\" }\n}"
+            },
+            {
+              "name": "User Not Found (404)",
+              "status": "Not Found",
+              "code": 404,
+              "body": "{\n  \"success\": false,\n  \"message\": \"User not found\"\n}"
+            },
+            {
+              "name": "Invalid Password (401)",
+              "status": "Unauthorized",
+              "code": 401,
+              "body": "{\n  \"success\": false,\n  \"message\": \"Invalid password\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Login - Wrong Password",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/auth/login", "host": ["{{base_url}}"], "path": ["api", "auth", "login"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"test@example.com\",\n  \"password\": \"wrongpassword\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Login as Admin",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Admin login successful', function () {",
+                  "  var json = pm.response.json();",
+                  "  pm.expect(json.success).to.be.true;",
+                  "  pm.expect(json.data.role).to.eql('ADMIN');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/auth/login", "host": ["{{base_url}}"], "path": ["api", "auth", "login"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"password123\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": { "raw": "{{base_url}}/api/auth/logout", "host": ["{{base_url}}"], "path": ["api", "auth", "logout"] }
+          },
+          "response": [
+            {
+              "name": "Success (200)",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"success\": true,\n  \"message\": \"Logout successful\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Forgot Password",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/auth/forgotpassword", "host": ["{{base_url}}"], "path": ["api", "auth", "forgotpassword"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"test@example.com\"\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "Success (200)",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"success\": true,\n  \"message\": \"Password reset email sent\"\n}"
+            },
+            {
+              "name": "User Not Found (404)",
+              "status": "Not Found",
+              "code": 404,
+              "body": "{\n  \"success\": false,\n  \"message\": \"User not found\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Reset Password",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/auth/resetpassword/:resetToken", "host": ["{{base_url}}"], "path": ["api", "auth", "resetpassword", ":resetToken"], "variable": [{ "key": "resetToken", "value": "PASTE_TOKEN_FROM_EMAIL_HERE" }] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"password\": \"newpassword123\"\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "Success (200)",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"success\": true,\n  \"message\": \"Password reset successfully\"\n}"
+            },
+            {
+              "name": "Invalid/Expired Token (400)",
+              "status": "Bad Request",
+              "code": 400,
+              "body": "{\n  \"success\": false,\n  \"message\": \"Invalid or expired token\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Change Password (Logged In)",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/auth/changepassword", "host": ["{{base_url}}"], "path": ["api", "auth", "changepassword"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"currentPassword\": \"password123\",\n  \"newPassword\": \"newpassword456\"\n}"
+            }
+          },
+          "response": [
+            {
+              "name": "Success (200)",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"success\": true,\n  \"message\": \"Password changed successfully\"\n}"
+            },
+            {
+              "name": "Incorrect Old Password (400)",
+              "status": "Bad Request",
+              "code": 400,
+              "body": "{\n  \"success\": false,\n  \"message\": \"Incorrect old password\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Change Password - No Auth (Error)",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/auth/changepassword", "host": ["{{base_url}}"], "path": ["api", "auth", "changepassword"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"currentPassword\": \"password123\",\n  \"newPassword\": \"newpassword456\"\n}"
+            },
+            "description": "Run this AFTER logging out to verify 401 is returned."
+          }
+        }
+      ]
+    },
+    {
+      "name": "User & Profile",
+      "item": [
+        {
+          "name": "Get Profile (/api/user/profile)",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/user/profile", "host": ["{{base_url}}"], "path": ["api", "user", "profile"] }
+          }
+        },
+        {
+          "name": "Update Profile (/api/user/profile) - JSON",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/user/profile", "host": ["{{base_url}}"], "path": ["api", "user", "profile"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated Name\",\n  \"phone\": \"0987654321\"\n}"
+            },
+            "description": "Note: name and phone are required. profileImage is optional."
+          }
+        },
+        {
+          "name": "Update Profile (/api/user/profile) - FormData with Image",
+          "request": {
+            "method": "PUT",
+            "url": { "raw": "{{base_url}}/api/user/profile", "host": ["{{base_url}}"], "path": ["api", "user", "profile"] },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "name", "value": "Updated Name", "type": "text" },
+                { "key": "phone", "value": "0987654321", "type": "text" },
+                { "key": "profileImage", "type": "file", "src": "" }
+              ]
+            },
+            "description": "This route accepts BOTH multipart/form-data and JSON. Use FormData when uploading an image."
+          }
+        },
+        {
+          "name": "Get Profile (/api/users/profile) [DUPLICATE]",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/users/profile", "host": ["{{base_url}}"], "path": ["api", "users", "profile"] },
+            "description": "DUPLICATE of /api/user/profile. Both are live. This one also includes addresses in response."
+          }
+        },
+        {
+          "name": "Update Profile (/api/users/profile) [DUPLICATE]",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/users/profile", "host": ["{{base_url}}"], "path": ["api", "users", "profile"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated Name\",\n  \"phone\": \"0987654321\",\n  \"email\": \"newemail@example.com\"\n}"
+            },
+            "description": "DUPLICATE of /api/user/profile PUT. This version accepts email change and checks for duplicates (409). JSON-only."
+          }
+        },
+        {
+          "name": "Upload Profile Image (/api/users/profile/image)",
+          "request": {
+            "method": "PUT",
+            "url": { "raw": "{{base_url}}/api/users/profile/image", "host": ["{{base_url}}"], "path": ["api", "users", "profile", "image"] },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "image", "type": "file", "src": "" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Security Settings",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/user/security", "host": ["{{base_url}}"], "path": ["api", "user", "security"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"currentPassword\": \"password123\",\n  \"newPassword\": \"newpassword456\"\n}"
+            },
+            "description": "Field names are currentPassword/newPassword."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Addresses",
+      "item": [
+        {
+          "name": "Get All Addresses",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/user/addresses", "host": ["{{base_url}}"], "path": ["api", "user", "addresses"] }
+          }
+        },
+        {
+          "name": "Add Address",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/user/addresses", "host": ["{{base_url}}"], "path": ["api", "user", "addresses"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"label\": \"Home\",\n  \"street\": \"123 Main St\",\n  \"city\": \"Lahore\",\n  \"province\": \"Punjab\",\n  \"postalCode\": \"54000\",\n  \"country\": \"Pakistan\",\n  \"isDefault\": true\n}"
+            },
+            "description": "Required: label, street, city, postalCode, country. Optional: province (defaults to ''), isDefault (defaults to false)."
+          }
+        },
+        {
+          "name": "Add Address - Missing Fields (Error)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/user/addresses", "host": ["{{base_url}}"], "path": ["api", "user", "addresses"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"label\": \"Home\",\n  \"street\": \"123 Main St\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Update Address",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/user/addresses/:id", "host": ["{{base_url}}"], "path": ["api", "user", "addresses", ":id"], "variable": [{ "key": "id", "value": "PASTE_ADDRESS_ID" }] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"label\": \"Office\",\n  \"street\": \"456 Business Ave\",\n  \"city\": \"Karachi\",\n  \"province\": \"Sindh\",\n  \"postalCode\": \"75500\",\n  \"country\": \"Pakistan\",\n  \"isDefault\": false\n}"
+            }
+          }
+        },
+        {
+          "name": "Delete Address",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{base_url}}/api/user/addresses/:id", "host": ["{{base_url}}"], "path": ["api", "user", "addresses", ":id"], "variable": [{ "key": "id", "value": "PASTE_ADDRESS_ID" }] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Products",
+      "item": [
+        {
+          "name": "Get All Products",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/products?page=1&limit=10&sort=newest",
+              "host": ["{{base_url}}"],
+              "path": ["api", "products"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "10" },
+                { "key": "search", "value": "macbook", "disabled": true },
+                { "key": "category", "value": "", "disabled": true, "description": "categoryId (cuid)" },
+                { "key": "brand", "value": "", "disabled": true, "description": "brandId (cuid)" },
+                { "key": "minPrice", "value": "", "disabled": true },
+                { "key": "maxPrice", "value": "", "disabled": true },
+                { "key": "sort", "value": "newest", "description": "newest | oldest | price_asc | price_desc" }
+              ]
+            },
+            "description": "All 7 query params verified in code: page, limit, search, category, brand, minPrice, maxPrice, sort."
+          }
+        },
+        {
+          "name": "Get Product by ID",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/products/:id", "host": ["{{base_url}}"], "path": ["api", "products", ":id"], "variable": [{ "key": "id", "value": "PASTE_PRODUCT_ID" }] }
+          }
+        },
+        {
+          "name": "Get Product Reviews",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/products/:id/reviews", "host": ["{{base_url}}"], "path": ["api", "products", ":id", "reviews"], "variable": [{ "key": "id", "value": "PASTE_PRODUCT_ID" }] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Categories",
+      "item": [
+        {
+          "name": "Get All Categories",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/categories", "host": ["{{base_url}}"], "path": ["api", "categories"] }
+          }
+        },
+        {
+          "name": "Get Category by ID",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/categories/:id", "host": ["{{base_url}}"], "path": ["api", "categories", ":id"], "variable": [{ "key": "id", "value": "PASTE_CATEGORY_ID" }] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Brands",
+      "item": [
+        {
+          "name": "Get All Brands",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/brands", "host": ["{{base_url}}"], "path": ["api", "brands"] }
+          }
+        },
+        {
+          "name": "Get Brand by ID",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/brands/:id", "host": ["{{base_url}}"], "path": ["api", "brands", ":id"], "variable": [{ "key": "id", "value": "PASTE_BRAND_ID" }] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Cart",
+      "item": [
+        {
+          "name": "Get Cart",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/cart", "host": ["{{base_url}}"], "path": ["api", "cart"] }
+          }
+        },
+        {
+          "name": "Add to Cart",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/cart", "host": ["{{base_url}}"], "path": ["api", "cart"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productId\": \"PASTE_PRODUCT_ID\",\n  \"quantity\": 1\n}"
+            }
+          }
+        },
+        {
+          "name": "Add to Cart - Missing ProductId (Error)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/cart", "host": ["{{base_url}}"], "path": ["api", "cart"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"quantity\": 1\n}"
+            }
+          }
+        },
+        {
+          "name": "Update Cart Item Quantity",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/cart/items/:itemId", "host": ["{{base_url}}"], "path": ["api", "cart", "items", ":itemId"], "variable": [{ "key": "itemId", "value": "PASTE_CART_ITEM_ID" }] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"quantity\": 2\n}"
+            }
+          }
+        },
+        {
+          "name": "Remove Cart Item",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{base_url}}/api/cart/items/:itemId", "host": ["{{base_url}}"], "path": ["api", "cart", "items", ":itemId"], "variable": [{ "key": "itemId", "value": "PASTE_CART_ITEM_ID" }] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Wishlist",
+      "item": [
+        {
+          "name": "Get Wishlist",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/wishlist", "host": ["{{base_url}}"], "path": ["api", "wishlist"] }
+          }
+        },
+        {
+          "name": "Add to Wishlist",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/wishlist", "host": ["{{base_url}}"], "path": ["api", "wishlist"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productId\": \"PASTE_PRODUCT_ID\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Remove from Wishlist",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{base_url}}/api/wishlist/:productId", "host": ["{{base_url}}"], "path": ["api", "wishlist", ":productId"], "variable": [{ "key": "productId", "value": "PASTE_PRODUCT_ID" }] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reviews",
+      "item": [
+        {
+          "name": "Add Review",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/reviews", "host": ["{{base_url}}"], "path": ["api", "reviews"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productId\": \"PASTE_PRODUCT_ID\",\n  \"rating\": 5,\n  \"comment\": \"Excellent product!\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Add Review - Invalid Rating (Error)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/reviews", "host": ["{{base_url}}"], "path": ["api", "reviews"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productId\": \"PASTE_PRODUCT_ID\",\n  \"rating\": 10,\n  \"comment\": \"Invalid rating\"\n}"
+            },
+            "description": "Rating must be 1-5. Expects 400."
+          }
+        },
+        {
+          "name": "Edit Review",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/reviews/:reviewId", "host": ["{{base_url}}"], "path": ["api", "reviews", ":reviewId"], "variable": [{ "key": "reviewId", "value": "PASTE_REVIEW_ID" }] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rating\": 4,\n  \"comment\": \"Updated my review\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Delete Review",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{base_url}}/api/reviews/:reviewId", "host": ["{{base_url}}"], "path": ["api", "reviews", ":reviewId"], "variable": [{ "key": "reviewId", "value": "PASTE_REVIEW_ID" }] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Orders & Checkout",
+      "item": [
+        {
+          "name": "Validate Coupon",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/coupons/validate", "host": ["{{base_url}}"], "path": ["api", "coupons", "validate"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"SUMMER20\",\n  \"subtotal\": 150.00\n}"
+            }
+          }
+        },
+        {
+          "name": "Place Order (COD Checkout)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/orders", "host": ["{{base_url}}"], "path": ["api", "orders"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"address\": {\n    \"firstName\": \"Test\",\n    \"lastName\": \"User\",\n    \"street\": \"123 Main St\",\n    \"city\": \"Lahore\",\n    \"province\": \"Punjab\",\n    \"postalCode\": \"54000\",\n    \"country\": \"Pakistan\"\n  },\n  \"paymentMethod\": \"cod\",\n  \"couponCode\": \"\"\n}"
+            },
+            "description": "CRITICAL: address is an INLINE OBJECT (not an address ID). Route creates a new Address record. paymentMethod defaults to 'cod' but code accepts ANY string (no validation). Tax is hardcoded at 8%. Shipping is $0."
+          }
+        },
+        {
+          "name": "Place Order - Empty Cart (Error)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/api/orders", "host": ["{{base_url}}"], "path": ["api", "orders"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"address\": {\n    \"firstName\": \"Test\",\n    \"lastName\": \"User\",\n    \"street\": \"123 Main St\",\n    \"city\": \"Lahore\",\n    \"postalCode\": \"54000\",\n    \"country\": \"Pakistan\"\n  },\n  \"paymentMethod\": \"cod\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Get My Orders",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/orders", "host": ["{{base_url}}"], "path": ["api", "orders"] }
+          }
+        },
+        {
+          "name": "Get Order by ID",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/api/orders/:id", "host": ["{{base_url}}"], "path": ["api", "orders", ":id"], "variable": [{ "key": "id", "value": "PASTE_ORDER_ID" }] },
+            "description": "Returns order details. User must own the order, OR be an ADMIN."
+          }
+        },
+        {
+          "name": "Cancel Order",
+          "request": {
+            "method": "PUT",
+            "url": { "raw": "{{base_url}}/api/orders/:id/cancel", "host": ["{{base_url}}"], "path": ["api", "orders", ":id", "cancel"], "variable": [{ "key": "id", "value": "PASTE_ORDER_ID" }] },
+            "description": "Cancels an order. Only allowed if status is 'pending' or 'processing'."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin",
+      "item": [
+        {
+          "name": "Dashboard",
+          "item": [
+            {
+              "name": "Get Dashboard Stats",
+              "request": {
+                "method": "GET",
+                "url": { "raw": "{{base_url}}/api/admin/dashboard", "host": ["{{base_url}}"], "path": ["api", "admin", "dashboard"] }
+              }
+            },
+            {
+              "name": "Get Dashboard - Not Admin (Error)",
+              "request": {
+                "method": "GET",
+                "url": { "raw": "{{base_url}}/api/admin/dashboard", "host": ["{{base_url}}"], "path": ["api", "admin", "dashboard"] },
+                "description": "Login as a regular USER first, then run this. Expects 403."
+              }
+            }
+          ]
+        },
+        {
+          "name": "Users",
+          "item": [
+            {
+              "name": "Get All Users",
+              "request": {
+                "method": "GET",
+                "url": { "raw": "{{base_url}}/api/admin/users", "host": ["{{base_url}}"], "path": ["api", "admin", "users"] }
+              }
+            },
+            {
+              "name": "Update User Role",
+              "request": {
+                "method": "PUT",
+                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "url": { "raw": "{{base_url}}/api/admin/users", "host": ["{{base_url}}"], "path": ["api", "admin", "users"] },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"userId\": \"PASTE_USER_ID\",\n  \"role\": \"ADMIN\"\n}"
+                },
+                "description": "Valid roles: ADMIN, USER"
+              }
+            },
+            {
+              "name": "Update User Role - Invalid Role (Error)",
+              "request": {
+                "method": "PUT",
+                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "url": { "raw": "{{base_url}}/api/admin/users", "host": ["{{base_url}}"], "path": ["api", "admin", "users"] },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"userId\": \"PASTE_USER_ID\",\n  \"role\": \"SUPERADMIN\"\n}"
+                }
+              }
+            },
+            {
+              "name": "Delete User",
+              "request": {
+                "method": "DELETE",
+                "url": { "raw": "{{base_url}}/api/admin/users/:id", "host": ["{{base_url}}"], "path": ["api", "admin", "users", ":id"], "variable": [{ "key": "id", "value": "PASTE_USER_ID" }] },
+                "description": "Permanently deletes user and all cascading data. Cannot delete yourself."
+              }
+            }
+          ]
+        },
+        {
+          "name": "Products",
+          "item": [
+            {
+              "name": "Create Product",
+              "request": {
+                "method": "POST",
+                "url": { "raw": "{{base_url}}/api/admin/products", "host": ["{{base_url}}"], "path": ["api", "admin", "products"] },
+                "body": {
+                  "mode": "formdata",
+                  "formdata": [
+                    { "key": "name", "value": "Test Product", "type": "text" },
+                    { "key": "description", "value": "A test product description", "type": "text" },
+                    { "key": "price", "value": "99.99", "type": "text" },
+                    { "key": "discountPrice", "value": "79.99", "type": "text" },
+                    { "key": "stock", "value": "50", "type": "text" },
+                    { "key": "categoryId", "value": "PASTE_CATEGORY_ID", "type": "text" },
+                    { "key": "brandId", "value": "PASTE_BRAND_ID", "type": "text" },
+                    { "key": "images", "type": "file", "src": "" }
+                  ]
+                },
+                "description": "Required: name, price, stock, categoryId, brandId. Optional: description, discountPrice, images (files)."
+              }
+            },
+            {
+              "name": "Update Product",
+              "request": {
+                "method": "PUT",
+                "url": { "raw": "{{base_url}}/api/admin/products/:id", "host": ["{{base_url}}"], "path": ["api", "admin", "products", ":id"], "variable": [{ "key": "id", "value": "PASTE_PRODUCT_ID" }] },
+                "body": {
+                  "mode": "formdata",
+                  "formdata": [
+                    { "key": "name", "value": "Updated Product Name", "type": "text" },
+                    { "key": "price", "value": "109.99", "type": "text" },
+                    { "key": "stock", "value": "30", "type": "text" },
+                    { "key": "isActive", "value": "true", "type": "text" },
+                    { "key": "images", "type": "file", "src": "", "disabled": true }
+                  ]
+                },
+                "description": "All fields optional. New images are APPENDED to existing ones."
+              }
+            },
+            {
+              "name": "Delete Product (Soft Delete)",
+              "request": {
+                "method": "DELETE",
+                "url": { "raw": "{{base_url}}/api/admin/products/:id", "host": ["{{base_url}}"], "path": ["api", "admin", "products", ":id"], "variable": [{ "key": "id", "value": "PASTE_PRODUCT_ID" }] },
+                "description": "SOFT delete: sets deletedAt and isActive=false. Product is not removed from DB."
+              }
+            }
+          ]
+        },
+        {
+          "name": "Categories",
+          "item": [
+            {
+              "name": "Create Category",
+              "request": {
+                "method": "POST",
+                "url": { "raw": "{{base_url}}/api/admin/categories", "host": ["{{base_url}}"], "path": ["api", "admin", "categories"] },
+                "body": {
+                  "mode": "formdata",
+                  "formdata": [
+                    { "key": "name", "value": "New Category", "type": "text" },
+                    { "key": "parentId", "value": "", "type": "text", "disabled": true },
+                    { "key": "image", "type": "file", "src": "", "disabled": true }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Update Category",
+              "request": {
+                "method": "PUT",
+                "url": { "raw": "{{base_url}}/api/admin/categories/:id", "host": ["{{base_url}}"], "path": ["api", "admin", "categories", ":id"], "variable": [{ "key": "id", "value": "PASTE_CATEGORY_ID" }] },
+                "body": {
+                  "mode": "formdata",
+                  "formdata": [
+                    { "key": "name", "value": "Updated Category Name", "type": "text" },
+                    { "key": "parentId", "value": "", "type": "text", "disabled": true },
+                    { "key": "image", "type": "file", "src": "", "disabled": true }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Delete Category",
+              "request": {
+                "method": "DELETE",
+                "url": { "raw": "{{base_url}}/api/admin/categories/:id", "host": ["{{base_url}}"], "path": ["api", "admin", "categories", ":id"], "variable": [{ "key": "id", "value": "PASTE_CATEGORY_ID" }] },
+                "description": "HARD delete. Fails if category has subcategories or products (400)."
+              }
+            }
+          ]
+        },
+        {
+          "name": "Brands",
+          "item": [
+            {
+              "name": "Create Brand",
+              "request": {
+                "method": "POST",
+                "url": { "raw": "{{base_url}}/api/admin/brands", "host": ["{{base_url}}"], "path": ["api", "admin", "brands"] },
+                "body": {
+                  "mode": "formdata",
+                  "formdata": [
+                    { "key": "name", "value": "New Brand", "type": "text" },
+                    { "key": "description", "value": "Brand description", "type": "text" },
+                    { "key": "logo", "type": "file", "src": "", "disabled": true }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Update Brand",
+              "request": {
+                "method": "PUT",
+                "url": { "raw": "{{base_url}}/api/admin/brands/:id", "host": ["{{base_url}}"], "path": ["api", "admin", "brands", ":id"], "variable": [{ "key": "id", "value": "PASTE_BRAND_ID" }] },
+                "body": {
+                  "mode": "formdata",
+                  "formdata": [
+                    { "key": "name", "value": "Updated Brand", "type": "text" },
+                    { "key": "description", "value": "Updated description", "type": "text" },
+                    { "key": "logo", "type": "file", "src": "", "disabled": true }
+                  ]
+                }
+              }
+            },
+            {
+              "name": "Delete Brand",
+              "request": {
+                "method": "DELETE",
+                "url": { "raw": "{{base_url}}/api/admin/brands/:id", "host": ["{{base_url}}"], "path": ["api", "admin", "brands", ":id"], "variable": [{ "key": "id", "value": "PASTE_BRAND_ID" }] },
+                "description": "HARD delete. Fails if brand has products (400)."
+              }
+            }
+          ]
+        },
+        {
+          "name": "Orders",
+          "item": [
+            {
+              "name": "Get All Orders",
+              "request": {
+                "method": "GET",
+                "url": { "raw": "{{base_url}}/api/admin/orders", "host": ["{{base_url}}"], "path": ["api", "admin", "orders"] }
+              }
+            },
+            {
+              "name": "Update Order Status",
+              "request": {
+                "method": "PUT",
+                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "url": { "raw": "{{base_url}}/api/admin/orders", "host": ["{{base_url}}"], "path": ["api", "admin", "orders"] },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"orderId\": \"PASTE_ORDER_ID\",\n  \"status\": \"shipped\"\n}"
+                },
+                "description": "Valid statuses: pending, processing, shipped, delivered, cancelled, returned"
+              }
+            },
+            {
+              "name": "Update Order Status - Invalid (Error)",
+              "request": {
+                "method": "PUT",
+                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "url": { "raw": "{{base_url}}/api/admin/orders", "host": ["{{base_url}}"], "path": ["api", "admin", "orders"] },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"orderId\": \"PASTE_ORDER_ID\",\n  \"status\": \"invalid_status\"\n}"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Coupons",
+          "item": [
+            {
+              "name": "Get All Coupons",
+              "request": {
+                "method": "GET",
+                "url": { "raw": "{{base_url}}/api/admin/coupons", "host": ["{{base_url}}"], "path": ["api", "admin", "coupons"] }
+              }
+            },
+            {
+              "name": "Create Coupon",
+              "request": {
+                "method": "POST",
+                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "url": { "raw": "{{base_url}}/api/admin/coupons", "host": ["{{base_url}}"], "path": ["api", "admin", "coupons"] },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"code\": \"TESTCOUPON\",\n  \"discountType\": \"percentage\",\n  \"discountValue\": 10,\n  \"minOrderValue\": 50,\n  \"usageLimit\": 100,\n  \"expiryDate\": \"2026-12-31\"\n}"
+                },
+                "description": "Required: code, discountType (percentage|fixed), discountValue. Optional: minOrderValue, usageLimit, expiryDate."
+              }
+            },
+            {
+              "name": "Update Coupon",
+              "request": {
+                "method": "PUT",
+                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "url": { "raw": "{{base_url}}/api/admin/coupons/:id", "host": ["{{base_url}}"], "path": ["api", "admin", "coupons", ":id"], "variable": [{ "key": "id", "value": "PASTE_COUPON_ID" }] },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"code\": \"UPDATEDCOUPON\",\n  \"discountType\": \"fixed\",\n  \"discountValue\": 25,\n  \"minOrderValue\": 100,\n  \"usageLimit\": 50,\n  \"expiryDate\": \"2027-06-30\"\n}"
+                }
+              }
+            },
+            {
+              "name": "Delete Coupon",
+              "request": {
+                "method": "DELETE",
+                "url": { "raw": "{{base_url}}/api/admin/coupons/:id", "host": ["{{base_url}}"], "path": ["api", "admin", "coupons", ":id"], "variable": [{ "key": "id", "value": "PASTE_COUPON_ID" }] }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Reviews",
+          "item": [
+            {
+              "name": "Get All Reviews",
+              "request": {
+                "method": "GET",
+                "url": { "raw": "{{base_url}}/api/admin/reviews", "host": ["{{base_url}}"], "path": ["api", "admin", "reviews"] }
+              }
+            },
+            {
+              "name": "Delete Review",
+              "request": {
+                "method": "DELETE",
+                "url": { "raw": "{{base_url}}/api/admin/reviews/:id", "host": ["{{base_url}}"], "path": ["api", "admin", "reviews", ":id"], "variable": [{ "key": "id", "value": "PASTE_REVIEW_ID" }] }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

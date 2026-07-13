@@ -6,7 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Eye, EyeOff } from 'lucide-react';
 
 import { resetPassword } from '@/services/authService';
 import { Input } from '@/components/ui/input';
@@ -29,6 +29,8 @@ export default function ResetPasswordForm() {
   const [apiError, setApiError] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const {
     register,
@@ -93,25 +95,43 @@ export default function ResetPasswordForm() {
           
           <div className="space-y-2">
             <Label htmlFor="password">New Password</Label>
-            <Input 
-              id="password"
-              type="password"
-              placeholder="Enter new password"
-              className={errors.password ? "border-destructive focus-visible:ring-destructive" : ""}
-              {...register('password')}
-            />
+            <div className="relative">
+              <Input 
+                id="password"
+                type={showPassword ? "text" : "password"}
+                placeholder="Enter new password"
+                className={errors.password ? "border-destructive focus-visible:ring-destructive pr-10" : "pr-10"}
+                {...register('password')}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+              >
+                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
             {errors.password && <p className="text-sm font-medium text-destructive">{errors.password.message}</p>}
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="confirmPassword">Confirm Password</Label>
-            <Input 
-              id="confirmPassword"
-              type="password"
-              placeholder="Confirm new password"
-              className={errors.confirmPassword ? "border-destructive focus-visible:ring-destructive" : ""}
-              {...register('confirmPassword')}
-            />
+            <div className="relative">
+              <Input 
+                id="confirmPassword"
+                type={showConfirmPassword ? "text" : "password"}
+                placeholder="Confirm new password"
+                className={errors.confirmPassword ? "border-destructive focus-visible:ring-destructive pr-10" : "pr-10"}
+                {...register('confirmPassword')}
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+              >
+                {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
             {errors.confirmPassword && <p className="text-sm font-medium text-destructive">{errors.confirmPassword.message}</p>}
           </div>
 

@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
-import { Trash2, Plus, Search } from 'lucide-react';
+import { Trash2, Plus, Search, Pencil } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
@@ -11,6 +11,7 @@ export default function CouponList({ initialCoupons }) {
   const [coupons, setCoupons] = useState(initialCoupons);
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingCoupon, setEditingCoupon] = useState(null); // null = create mode, object = edit mode
   const router = useRouter();
 
   // Form State
@@ -25,14 +26,30 @@ export default function CouponList({ initialCoupons }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const openModal = () => {
+  const openCreateModal = () => {
+    setEditingCoupon(null);
     setFormData({ code: '', discountType: 'percentage', discountValue: '', minOrderValue: '', usageLimit: '', expiryDate: '' });
+    setError('');
+    setIsModalOpen(true);
+  };
+
+  const openEditModal = (coupon) => {
+    setEditingCoupon(coupon);
+    setFormData({
+      code: coupon.code,
+      discountType: coupon.discountType,
+      discountValue: coupon.discountValue.toString(),
+      minOrderValue: coupon.minOrderValue ? coupon.minOrderValue.toString() : '',
+      usageLimit: coupon.usageLimit ? coupon.usageLimit.toString() : '',
+      expiryDate: coupon.expiryDate ? new Date(coupon.expiryDate).toISOString().split('T')[0] : ''
+    });
     setError('');
     setIsModalOpen(true);
   };
 
   const closeModal = () => {
     setIsModalOpen(false);
+    setEditingCoupon(null);
   };
 
   const handleSubmit = async (e) => {
@@ -41,14 +58,25 @@ export default function CouponList({ initialCoupons }) {
     setError('');
 
     try {
-      const response = await axios.post('/api/admin/coupons', formData, { withCredentials: true });
-      if (response.data.success) {
-        setCoupons([response.data.data, ...coupons]);
-        closeModal();
-        router.refresh();
+      if (editingCoupon) {
+        // Edit mode
+        const response = await axios.put(`/api/admin/coupons/${editingCoupon.id}`, formData, { withCredentials: true });
+        if (response.data.success) {
+          setCoupons(coupons.map(c => c.id === editingCoupon.id ? response.data.data : c));
+          closeModal();
+          router.refresh();
+        }
+      } else {
+        // Create mode
+        const response = await axios.post('/api/admin/coupons', formData, { withCredentials: true });
+        if (response.data.success) {
+          setCoupons([response.data.data, ...coupons]);
+          closeModal();
+          router.refresh();
+        }
       }
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to create coupon');
+      setError(err.response?.data?.message || `Failed to ${editingCoupon ? 'update' : 'create'} coupon`);
     } finally {
       setLoading(false);
     }
@@ -82,7 +110,7 @@ export default function CouponList({ initialCoupons }) {
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-        <Button onClick={openModal} className="w-full md:w-auto">
+        <Button onClick={openCreateModal} className="w-full md:w-auto">
           <Plus className="w-4 h-4 mr-2" /> Add Coupon
         </Button>
       </div>
@@ -125,6 +153,9 @@ export default function CouponList({ initialCoupons }) {
                     {coupon.expiryDate ? new Date(coupon.expiryDate).toLocaleDateString() : 'Never'}
                   </td>
                   <td className="px-6 py-4 text-right">
+                    <Button variant="ghost" size="icon" onClick={() => openEditModal(coupon)}>
+                      <Pencil className="w-4 h-4 text-muted-foreground hover:text-primary transition-colors" />
+                    </Button>
                     <Button variant="ghost" size="icon" onClick={() => handleDelete(coupon.id)}>
                       <Trash2 className="w-4 h-4 text-muted-foreground hover:text-destructive transition-colors" />
                     </Button>
@@ -136,12 +167,12 @@ export default function CouponList({ initialCoupons }) {
         </table>
       </div>
 
-      {/* Modal */}
+      {/* Modal for Create / Edit */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
           <div className="bg-surface-container-lowest rounded-xl shadow-lg w-full max-w-[450px] overflow-hidden">
             <div className="p-6 border-b border-border">
-              <h2 className="text-xl font-bold text-foreground">Add New Coupon</h2>
+              <h2 className="text-xl font-bold text-foreground">{editingCoupon ? 'Edit Coupon' : 'Add New Coupon'}</h2>
             </div>
             
             <form onSubmit={handleSubmit} className="p-6 space-y-4">
@@ -217,7 +248,9 @@ export default function CouponList({ initialCoupons }) {
 
               <div className="pt-4 flex justify-end gap-3">
                 <Button type="button" variant="outline" onClick={closeModal}>Cancel</Button>
-                <Button type="submit" disabled={loading}>{loading ? 'Creating...' : 'Create Coupon'}</Button>
+                <Button type="submit" disabled={loading}>
+                  {loading ? (editingCoupon ? 'Updating...' : 'Creating...') : (editingCoupon ? 'Update Coupon' : 'Create Coupon')}
+                </Button>
               </div>
             </form>
           </div>
@@ -226,3 +259,4 @@ export default function CouponList({ initialCoupons }) {
     </div>
   );
 }
+

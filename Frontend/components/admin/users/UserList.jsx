@@ -3,7 +3,8 @@
 import { useState } from 'react';
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
-import { Search, ShieldAlert, ShieldCheck } from 'lucide-react';
+import { Search, ShieldAlert, ShieldCheck, Trash2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
@@ -26,6 +27,20 @@ export default function UserList({ initialUsers }) {
         alert(err.response?.data?.message || 'Error updating user role');
       } finally {
         setLoadingId(null);
+      }
+    }
+  };
+
+  const handleDelete = async (userId) => {
+    if (confirm('Are you sure you want to permanently delete this user? This will also delete all their orders, reviews, and other data.')) {
+      try {
+        const response = await axios.delete(`/api/admin/users/${userId}`, { withCredentials: true });
+        if (response.data.success) {
+          setUsers(users.filter(u => u.id !== userId));
+          router.refresh();
+        }
+      } catch (err) {
+        alert(err.response?.data?.message || 'Error deleting user');
       }
     }
   };
@@ -57,7 +72,7 @@ export default function UserList({ initialUsers }) {
               <th className="px-6 py-4 font-medium">Contact</th>
               <th className="px-6 py-4 font-medium">Stats</th>
               <th className="px-6 py-4 font-medium">Joined</th>
-              <th className="px-6 py-4 font-medium text-right">Role</th>
+              <th className="px-6 py-4 font-medium text-right">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -95,7 +110,7 @@ export default function UserList({ initialUsers }) {
                   <td className="px-6 py-4 text-muted-foreground">
                     {new Date(user.createdAt).toLocaleDateString()}
                   </td>
-                  <td className="px-6 py-4 text-right">
+                  <td className="px-6 py-4 text-right flex items-center justify-end gap-2">
                     <select
                       value={user.role}
                       onChange={(e) => handleRoleChange(user.id, e.target.value)}
@@ -109,6 +124,9 @@ export default function UserList({ initialUsers }) {
                       <option value="USER">USER</option>
                       <option value="ADMIN">ADMIN</option>
                     </select>
+                    <Button variant="ghost" size="icon" onClick={() => handleDelete(user.id)} title="Delete user">
+                      <Trash2 className="w-4 h-4 text-muted-foreground hover:text-destructive transition-colors" />
+                    </Button>
                   </td>
                 </tr>
               ))

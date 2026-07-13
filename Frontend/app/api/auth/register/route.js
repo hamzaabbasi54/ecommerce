@@ -53,7 +53,7 @@ export async function POST(request) {
       {
         success: true,
         message: 'User created successfully',
-        user: {
+        data: {
           id: user.id,
           name: user.name,
           email: user.email,

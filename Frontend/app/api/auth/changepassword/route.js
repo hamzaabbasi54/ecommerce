@@ -6,12 +6,12 @@ import { verifyAuth } from '@/lib/auth';
 export async function PUT(request) {
   try {
     const user = await verifyAuth(request);
-    const { oldPassword, newPassword } = await request.json();
+    const { currentPassword, newPassword } = await request.json();
 
     // Fetch full user with password
     const fullUser = await prisma.user.findUnique({ where: { id: user.id } });
 
-    const isMatch = await bcrypt.compare(oldPassword, fullUser.password);
+    const isMatch = await bcrypt.compare(currentPassword, fullUser.password);
     if (!isMatch) {
       return NextResponse.json(
         { success: false, message: 'Incorrect old password' },

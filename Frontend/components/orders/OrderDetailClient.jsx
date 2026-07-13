@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getOrderById } from "@/services/orderService";
+import { getOrderById, cancelOrder } from "@/services/orderService";
 import { Loader2 } from "lucide-react";
 import Link from "next/link";
 
@@ -9,6 +9,27 @@ export default function OrderDetailClient({ orderId }) {
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [isCancelling, setIsCancelling] = useState(false);
+
+  const handleCancelOrder = async () => {
+    if (window.confirm("Are you sure you want to cancel this order? This action cannot be undone.")) {
+      setIsCancelling(true);
+      try {
+        const result = await cancelOrder(orderId);
+        if (result.success) {
+          window.alert("Order cancelled successfully");
+          // Update the local state to reflect cancellation
+          setOrder({ ...order, status: 'cancelled' });
+        } else {
+          window.alert(result.message || "Failed to cancel order");
+        }
+      } catch (err) {
+        window.alert(err.response?.data?.message || err.message || "Failed to cancel order");
+      } finally {
+        setIsCancelling(false);
+      }
+    }
+  };
 
   useEffect(() => {
     const fetchOrder = async () => {
@@ -64,11 +85,22 @@ export default function OrderDetailClient({ orderId }) {
             Placed on {new Intl.DateTimeFormat('en-US', { month: 'long', day: 'numeric', year: 'numeric' }).format(new Date(order.createdAt))}
           </p>
         </div>
-        <div className="inline-flex items-center gap-xs px-md py-sm bg-surface-container border border-surface-variant rounded-full w-fit">
-          <span className={`w-2 h-2 rounded-full ${order.status === 'pending' ? 'bg-amber-500' : 'bg-green-500'}`}></span>
-          <span className="font-label-sm text-label-sm capitalize text-on-surface-variant">
-            {order.status}
-          </span>
+        <div className="flex items-center gap-sm">
+          <div className="inline-flex items-center gap-xs px-md py-sm bg-surface-container border border-surface-variant rounded-full w-fit">
+            <span className={`w-2 h-2 rounded-full ${order.status === 'pending' ? 'bg-amber-500' : order.status === 'cancelled' ? 'bg-red-500' : 'bg-green-500'}`}></span>
+            <span className="font-label-sm text-label-sm capitalize text-on-surface-variant">
+              {order.status}
+            </span>
+          </div>
+          {(order.status === 'pending' || order.status === 'processing') && (
+            <button
+              onClick={handleCancelOrder}
+              disabled={isCancelling}
+              className="bg-transparent border border-error text-error px-md py-sm rounded-full font-button text-button hover:bg-error/10 transition-colors disabled:opacity-50"
+            >
+              {isCancelling ? 'Cancelling...' : 'Cancel Order'}
+            </button>
+          )}
         </div>
       </div>
 

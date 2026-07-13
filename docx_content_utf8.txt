@@ -1,0 +1,498 @@
+﻿Full Stack E-Commerce Web Application
+Internship Project Requirement Document
+Project Title: Full Stack E-Commerce Web Application
+Project Type: Internship Training Assignment
+Developer: Hamza Abbasi
+Supervisor: Project Lead
+
+1. Project Objective
+The purpose of this project is to train you as a Full Stack Web Developer by developing a production-ready E-Commerce application from scratch.
+Unlike tutorial-based projects, this assignment follows a real software company’s development workflow. You are expected to analyze requirements, design the database, build secure backend APIs, test them thoroughly, integrate them into a modern Next.js frontend, and deliver a complete, scalable application.
+You are responsible for the entire software development lifecycle (SDLC) including planning, development, testing, debugging, documentation, and deployment.
+
+2. Responsibilities
+You will be responsible for:
+Requirement analysis
+Database design
+Backend API development
+API testing using Postman
+Frontend development using Next.js
+API integration
+Authentication & Authorization
+Error handling
+Responsive UI development
+Testing
+Debugging
+Documentation
+Deployment
+
+3. Technology Stack
+Frontend
+Next.js (Latest Version)
+React
+TypeScript (Preferred)
+Tailwind CSS
+Axios / Fetch API
+React Hook Form
+Zod or Yup Validation
+Context API or Redux Toolkit
+Backend
+Node.js
+Express.js
+REST APIs
+JWT Authentication
+bcrypt Password Hashing
+Multer (Image Uploads)
+CORS
+dotenv
+Database
+PostgreSQL
+ORM Prisma
+
+4. Development Workflow
+Follow the workflow below.
+Phase 1
+Requirement Analysis
+↓
+Database Design
+↓
+API Planning
+↓
+Frontend Planning
+↓
+Development
+↓
+Testing
+↓
+Bug Fixing
+↓
+Deployment
+Never skip any phase.
+
+5. Git Workflow
+Use Git from Day 1.
+Create meaningful commits.
+Example
+Initial Project Setup
+User Authentication
+Database Models Added
+Product APIs Completed
+Cart Module Completed
+Checkout Module
+Frontend Integration
+Bug Fixes
+Deployment
+Push code regularly.
+Never keep all work in one commit.
+
+6. Project Folder Structure
+Frontend
+app/components/layouts/services/hooks/context/utils/constants/types/middleware/styles/public/
+Backend
+src/config/controllers/routes/models/middlewares/services/repositories/ (optional)validators/utils/uploads/database/
+Keep your folders clean and organized.
+
+7. Database Design
+Before writing any code:
+Create
+Database Schema
+Relationships
+Primary Keys
+Foreign Keys
+Tables / Collections
+Users
+Products
+Categories
+Brands
+Orders
+Order Items
+Cart
+Wishlist
+Reviews
+Coupons
+Addresses
+Normalize your database properly.
+
+8. Backend Development
+Develop the backend from scratch.
+Implement
+Authentication APIs
+Product APIs
+Category APIs
+Brand APIs
+Cart APIs
+Wishlist APIs
+Order APIs
+Review APIs
+User APIs
+Address APIs
+Coupon APIs
+Dashboard APIs (if Admin Panel is included)
+Use proper REST API conventions.
+
+9. API Standards
+Each API must have
+Correct HTTP Method
+Proper URL Structure
+Request Validation
+Response Validation
+Error Handling
+Authentication
+Authorization
+Pagination
+Filtering
+Searching
+Sorting
+Example Response
+{  "success": true,  "message": "Product fetched successfully",  "data": []}
+Error Response
+{  "success": false,  "message": "Product not found"}
+Use proper HTTP status codes.
+200
+201
+400
+401
+403
+404
+409
+422
+500
+
+10. API Testing (Mandatory)
+Every API must be tested in Postman before frontend integration.
+Verify:
+Request Method
+Headers
+Authentication
+Query Parameters
+Request Body
+Response
+Validation Errors
+Unauthorized Requests
+Invalid Inputs
+Server Errors
+Submit a Postman Collection containing all APIs.
+
+11. Authentication Module
+Develop complete authentication.
+Features
+Register
+Login
+Logout
+Forgot Password
+Reset Password
+Change Password
+JWT Authentication
+Protected Routes
+Refresh Token (Optional)
+Passwords must be hashed.
+Never store plain passwords.
+
+12. User Module
+Implement
+User Registration
+User Login
+User Profile
+Update Profile
+Upload Profile Image
+Change Password
+Address Management
+
+13. Product Module
+Backend
+Create Product
+Update Product
+Delete Product
+Get Products
+Get Product Details
+Pagination
+Search
+Filters
+Sorting
+Frontend
+Product Listing
+Product Details
+Responsive Cards
+Image Gallery
+Product Variants
+Product Description
+Related Products
+
+14. Categories Module
+Backend
+CRUD APIs
+Frontend
+Category Listing
+Products by Category
+
+15. Brands Module
+Backend
+CRUD APIs
+Frontend
+Brand Listing
+
+16. Shopping Cart
+Backend
+Add Item
+Remove Item
+Update Quantity
+Get Cart
+Frontend
+Add to Cart
+Quantity Update
+Remove Product
+Price Summary
+Persist cart after refresh.
+
+17. Wishlist
+Develop
+Add Wishlist
+Remove Wishlist
+Wishlist Page
+
+18. Reviews
+Develop
+Add Review
+Edit Review
+Delete Review
+Product Reviews
+
+19. Checkout
+Implement
+Shipping Address
+Billing Address
+Order Summary
+Shipping Charges
+Taxes
+Coupon
+Payment Method
+Place Order
+
+20. Orders
+Implement
+My Orders
+Order Details
+Order Status
+Cancel Order
+
+21. Admin Panel
+Develop an Admin Dashboard.
+Admin should manage
+Users
+Products
+Categories
+Brands
+Orders
+Coupons
+Reviews
+Dashboard should display
+Total Orders
+Total Revenue
+Total Users
+Total Products
+
+22. Frontend Development Standards
+Develop using reusable components.
+Avoid duplicate code.
+Use
+Custom Hooks
+Reusable Components
+Service Layer
+Clean Folder Structure
+Separate
+API Logic
+UI Logic
+Business Logic
+
+23. UI Requirements
+The UI should be
+Modern
+Professional
+Clean
+Fully Responsive
+Mobile Friendly
+Tablet Friendly
+Desktop Friendly
+Maintain consistent
+Colors
+Fonts
+Buttons
+Cards
+Forms
+Icons
+Spacing
+
+24. Form Validation
+Every form must validate
+Required Fields
+Email
+Password
+Confirm Password
+Phone Number
+Numbers
+File Uploads
+Never allow invalid submissions.
+
+25. Error Handling
+Handle
+Network Errors
+Validation Errors
+Unauthorized Access
+Expired Token
+Internal Server Errors
+Empty Results
+Display meaningful error messages.
+Never expose raw server errors.
+
+26. Loading States
+Every API request must include
+Loading Spinner
+Skeleton Loader
+Empty State
+Retry Option (where appropriate)
+
+27. Image Upload
+Implement
+Product Images
+Category Images
+User Profile Images
+Validate
+File Size
+File Type
+
+28. Security
+Follow security best practices.
+Implement
+JWT Authentication
+Password Hashing
+Environment Variables
+CORS
+Input Validation
+SQL/NoSQL Injection Prevention
+XSS Protection
+Never hardcode secrets.
+
+29. Performance Optimization
+Implement
+Image Optimization
+Pagination
+Lazy Loading
+Dynamic Imports
+Code Splitting
+API Caching (where applicable)
+
+30. SEO (Frontend)
+Implement
+Meta Title
+Meta Description
+Open Graph
+Dynamic Metadata
+Sitemap (Optional)
+
+31. Accessibility
+Ensure
+Semantic HTML
+Alt Text
+Keyboard Navigation
+Proper Labels
+Accessible Forms
+
+32. Documentation
+Maintain
+API Documentation
+Database Documentation
+README.md
+Installation Guide
+Environment Variables
+Deployment Guide
+
+33. Testing Checklist
+Test
+Backend
+Every API
+Authentication
+Validation
+Database Operations
+Error Handling
+Frontend
+Navigation
+Forms
+Responsive Design
+API Integration
+Search
+Filters
+Checkout
+Orders
+
+34. Deployment
+Deploy
+Backend
+Railway / Render / VPS (or as instructed)
+Frontend
+Vercel
+Database
+MongoDB Atlas or the assigned database server
+Ensure production environment variables are configured correctly.
+
+35. Deliverables
+Submit the following:
+Complete Frontend Source Code
+Complete Backend Source Code
+Database Schema / ER Diagram
+Postman Collection
+API Documentation
+README.md
+Environment Variable Sample (.env.example)
+Git Repository with meaningful commit history
+Deployment Links (Frontend & Backend)
+Bug Report (if any known issues remain)
+
+36. Evaluation Criteria
+Criteria
+Weight
+
+Project Structure
+10%
+
+Backend Development
+20%
+
+Frontend Development
+20%
+
+API Design & Integration
+15%
+
+Database Design
+10%
+
+Code Quality
+10%
+
+UI/UX & Responsiveness
+5%
+
+Testing & Postman
+5%
+
+Documentation
+5%
+
+
+37. Professional Expectations
+As an intern, you are expected to work as a professional software developer.
+You must:
+Plan your work before writing code.
+Build both the backend and frontend independently.
+Test every API in Postman before integrating it into the frontend.
+Write clean, modular, and reusable code.
+Follow REST API standards and proper project architecture.
+Keep frontend and backend code organized.
+Commit your work to Git regularly with meaningful commit messages.
+Document your APIs, database, and setup instructions.
+Ask questions whenever requirements are unclear instead of making assumptions.
+Test every feature before marking it as complete.
+Fix bugs promptly and maintain code quality throughout the project.
+Deliver production-quality work that is secure, scalable, maintainable, and well documented.
+This assignment is intended to simulate the expectations of a real software company. Treat every task as if you are developing software for a paying client.
+

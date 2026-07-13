@@ -6,6 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { Eye, EyeOff } from 'lucide-react';
 
 import { login } from '@/services/authService';
 import useAuthStore from '@/context/useAuthStore';
@@ -24,6 +25,7 @@ export default function LoginForm() {
   
   const [apiError, setApiError] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const { register, handleSubmit, formState: { errors }, } = useForm({ resolver: zodResolver(loginSchema),});
 
@@ -34,7 +36,7 @@ export default function LoginForm() {
     try {
       const response = await login(data);
       if (response.success) {
-        setUser(response.user);
+        setUser(response.data);
         router.push('/');
       }
     } catch (error) {
@@ -79,13 +81,22 @@ export default function LoginForm() {
 
           <div className="space-y-2">
             <Label htmlFor="password">Password</Label>
-            <Input 
-              id="password"
-              type="password"
-              placeholder="••••••••"
-              className={errors.password ? "border-destructive focus-visible:ring-destructive" : ""}
-              {...register('password')}
-            />
+            <div className="relative">
+              <Input 
+                id="password"
+                type={showPassword ? "text" : "password"}
+                placeholder="••••••••"
+                className={errors.password ? "border-destructive focus-visible:ring-destructive pr-10" : "pr-10"}
+                {...register('password')}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+              >
+                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
             {errors.password && (
               <p className="text-sm font-medium text-destructive">{errors.password.message}</p>
             )}
