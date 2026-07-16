@@ -4,10 +4,6 @@ import { verifyAuth } from '@/lib/auth';
 
 export async function POST(request) {
   try {
-    const user = await verifyAuth(request);
-    if (!user) {
-      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
-    }
 
     const body = await request.json();
     const { code, subtotal } = body;

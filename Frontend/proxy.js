@@ -2,9 +2,12 @@ import { NextResponse } from 'next/server';
 import { jwtVerify } from 'jose';
 
 // 1. Define Route Categories
-const protectedRoutes = ['/profile', '/checkout', '/wishlist', '/orders'];
+const protectedRoutes = ['/profile'];
+const guestAllowedProtectedRoutes = []; // Both pages handle empty guests via client-side UI
 const authRoutes = ['/login', '/register', '/forgot-password', '/reset-password'];
 const adminRoutes = ['/admin'];
+
+// Removed verifyOptionalAuth import to avoid Prisma Edge runtime errors
 
 export async function proxy(request) {
   const { pathname } = request.nextUrl;
@@ -35,7 +38,19 @@ export async function proxy(request) {
     return NextResponse.next();
   }
 
-  // 4. Handle Protected User Routes (Redirect guests to /login)
+  // 4. Handle Guest-Allowed Protected Routes (/checkout, /wishlist)
+  const isGuestAllowedRoute = guestAllowedProtectedRoutes.some((route) => pathname.startsWith(route));
+  if (isGuestAllowedRoute) {
+    // Fallback fix: avoid Prisma/DB query. Just check if a guest_token cookie exists.
+    const guestToken = request.cookies.get('guest_token')?.value;
+    
+    if (!decodedToken && !guestToken) {
+      return NextResponse.redirect(new URL('/login', request.url));
+    }
+    return NextResponse.next();
+  }
+
+  // 5. Handle Protected User Routes (Redirect guests to /login)
   const isProtectedRoute = protectedRoutes.some((route) => pathname.startsWith(route));
   if (isProtectedRoute) {
     if (!decodedToken) {

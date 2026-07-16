@@ -1,4 +1,4 @@
-export const orderSummaryTemplate = (order, user) => {
+export const orderSummaryTemplate = (order, recipient, shippingAddress) => {
     // order items expect to have the nested product info
     const itemsHtml = order.items.map(item => `
         <tr>
@@ -11,6 +11,19 @@ export const orderSummaryTemplate = (order, user) => {
             </td>
         </tr>
     `).join('');
+
+    // Build shipping address block if provided
+    const shippingHtml = shippingAddress ? `
+                <div style="margin-top: 32px;">
+                    <h2 style="margin: 0 0 12px; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; color: #666;">Shipping Address</h2>
+                    <p style="margin: 0; font-size: 14px; color: #333; line-height: 1.6;">
+                        ${shippingAddress.name}<br>
+                        ${shippingAddress.street}<br>
+                        ${shippingAddress.city}${shippingAddress.province ? ', ' + shippingAddress.province : ''} ${shippingAddress.postalCode}<br>
+                        ${shippingAddress.country}
+                    </p>
+                </div>
+    ` : '';
 
     return `
     <!DOCTYPE html>
@@ -41,7 +54,7 @@ export const orderSummaryTemplate = (order, user) => {
                 <h1>Order Confirmation</h1>
             </div>
             <div class="content">
-                <p class="greeting">Hi ${user.name},</p>
+                <p class="greeting">Hi ${recipient.name},</p>
                 <p style="font-size: 14px; color: #555; line-height: 1.5;">Thank you for your order! We've received it and will start processing it shortly. Below are your order details.</p>
                 
                 <div class="order-details">
@@ -59,6 +72,7 @@ export const orderSummaryTemplate = (order, user) => {
                         <div class="totals-row bold"><span>Total</span><span>$${order.total.toFixed(2)}</span></div>
                     </div>
                 </div>
+                ${shippingHtml}
             </div>
             <div class="footer">
                 <p>If you have any questions, simply reply to this email.</p>

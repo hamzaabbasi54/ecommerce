@@ -1,11 +1,25 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { verifyAuth } from '@/lib/auth';
+import { verifyOptionalAuth, getOrCreateGuest, refreshGuestCookie } from '@/lib/auth';
 
 // POST /api/wishlist
 export async function POST(request) {
   try {
-    const user = await verifyAuth(request);
+    let { user, guest } = await verifyOptionalAuth(request);
+    let guestCookieHeader = null;
+
+    // Auto-create guest on first write if no identity present
+    if (!user && !guest) {
+      const result = await getOrCreateGuest(request);
+      guest = result.guest;
+      guestCookieHeader = result.cookieHeader;
+    }
+
+    // Rolling refresh for existing guest
+    if (guest && !guestCookieHeader) {
+      guestCookieHeader = await refreshGuestCookie(guest);
+    }
+
     const { productId } = await request.json();
 
     if (!productId) {
@@ -23,9 +37,12 @@ export async function POST(request) {
       );
     }
 
-    const existingItem = await prisma.wishlist.findUnique({
-      where: { userId_productId: { userId: user.id, productId } },
-    });
+    // Check for existing wishlist entry using the appropriate unique constraint
+    const uniqueWhere = user
+      ? { userId_productId: { userId: user.id, productId } }
+      : { guestId_productId: { guestId: guest.id, productId } };
+
+    const existingItem = await prisma.wishlist.findUnique({ where: uniqueWhere });
 
     if (existingItem) {
       return NextResponse.json(
@@ -34,11 +51,17 @@ export async function POST(request) {
       );
     }
 
-    await prisma.wishlist.create({
-      data: { userId: user.id, productId },
-    });
+    const data = user
+      ? { userId: user.id, productId }
+      : { guestId: guest.id, productId };
 
-    return NextResponse.json({ success: true, message: 'Added to wishlist successfully' });
+    await prisma.wishlist.create({ data });
+
+    const response = NextResponse.json({ success: true, message: 'Added to wishlist successfully' });
+    if (guestCookieHeader) {
+      response.headers.set('Set-Cookie', guestCookieHeader);
+    }
+    return response;
   } catch (error) {
     if (error instanceof Response) return error;
     console.error('Error in addToWishlist:', error.message);
@@ -52,10 +75,28 @@ export async function POST(request) {
 // GET /api/wishlist
 export async function GET(request) {
   try {
-    const user = await verifyAuth(request);
+    const { user, guest } = await verifyOptionalAuth(request);
+    let guestCookieHeader = null;
+
+    // Rolling refresh for existing guest
+    if (guest) {
+      guestCookieHeader = await refreshGuestCookie(guest);
+    }
+
+    // No identity — return empty wishlist (no error)
+    if (!user && !guest) {
+      const response = NextResponse.json({
+        success: true,
+        message: 'Wishlist fetched successfully',
+        data: [],
+      });
+      return response;
+    }
+
+    const filterWhere = user ? { userId: user.id } : { guestId: guest.id };
 
     const wishlistItems = await prisma.wishlist.findMany({
-      where: { userId: user.id },
+      where: filterWhere,
       include: {
         product: {
           select: {
@@ -85,11 +126,15 @@ export async function GET(request) {
         },
       }));
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       success: true,
       message: 'Wishlist fetched successfully',
       data: validItems,
     });
+    if (guestCookieHeader) {
+      response.headers.set('Set-Cookie', guestCookieHeader);
+    }
+    return response;
   } catch (error) {
     if (error instanceof Response) return error;
     console.error('Error in getWishlist:', error.message);

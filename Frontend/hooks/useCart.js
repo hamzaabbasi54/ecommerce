@@ -5,6 +5,9 @@ const useCartStore = create((set, get) => ({
   cart: null,
   loading: false,
   error: null,
+  isDrawerOpen: false,
+
+  setDrawerOpen: (open) => set({ isDrawerOpen: open }),
 
   fetchCart: async () => {
     set({ loading: true, error: null });
@@ -24,56 +27,67 @@ const useCartStore = create((set, get) => ({
   },
 
   addItem: async (productId, quantity = 1) => {
-    set({ loading: true, error: null });
+    set({ error: null });
     try {
       const result = await cartService.addToCart({ productId, quantity });
-      // Re-fetch cart to get updated state
-      await get().fetchCart();
+      // Single fetch to sync — no double loading
+      if (result.success) {
+        const refreshed = await cartService.getCart();
+        if (refreshed.success) {
+          set({ cart: refreshed.data });
+        }
+      }
       return result;
     } catch (err) {
       const message = err.response?.data?.message || err.message || 'Failed to add to cart';
       set({ error: message });
       return null;
-    } finally {
-      set({ loading: false });
     }
   },
 
   updateItem: async (itemId, quantity) => {
-    set({ loading: true, error: null });
+    const prevCart = get().cart;
+
+    // Optimistic update — immediately reflect the change in UI
+    if (prevCart?.items) {
+      const optimisticItems = prevCart.items.map(item =>
+        item.id === itemId ? { ...item, quantity } : item
+      );
+      set({ cart: { ...prevCart, items: optimisticItems } });
+    }
+
     try {
-      const result = await cartService.updateCartItem(itemId, quantity);
-      await get().fetchCart();
-      return result;
+      await cartService.updateCartItem(itemId, quantity);
+      return { success: true };
     } catch (err) {
-      const message = err.response?.data?.message || err.message || 'Failed to update cart item';
-      set({ error: message });
+      // Rollback on error
+      set({ cart: prevCart, error: err.response?.data?.message || 'Failed to update cart item' });
       return null;
-    } finally {
-      set({ loading: false });
     }
   },
 
   removeItem: async (itemId) => {
-    set({ loading: true, error: null });
+    const prevCart = get().cart;
+
+    // Optimistic update — immediately remove the item from UI
+    if (prevCart?.items) {
+      const optimisticItems = prevCart.items.filter(item => item.id !== itemId);
+      set({ cart: { ...prevCart, items: optimisticItems } });
+    }
+
     try {
-      const result = await cartService.removeFromCart(itemId);
-      await get().fetchCart();
-      return result;
+      await cartService.removeFromCart(itemId);
+      return { success: true };
     } catch (err) {
-      const message = err.response?.data?.message || err.message || 'Failed to remove item';
-      set({ error: message });
+      // Rollback on error
+      set({ cart: prevCart, error: err.response?.data?.message || 'Failed to remove item' });
       return null;
-    } finally {
-      set({ loading: false });
     }
   },
 
   clearCart: async () => {
     set({ loading: true, error: null });
     try {
-      // Since the backend order creation already clears the cart items in the database,
-      // we just need to re-fetch the cart to sync our local state, or reset it directly.
       await get().fetchCart();
       return { success: true };
     } catch (err) {

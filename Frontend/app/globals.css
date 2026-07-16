@@ -5,43 +5,49 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme {
-  --color-background: #faf8fe;
-  --color-foreground: #1a1b1f;
+  --color-background: #fcf9f8;
+  --color-foreground: #1b1c1c;
 
   /* Custom Colors from Stitch Design */
-  --color-primary: #0050cb;
-  --color-primary-container: #0066ff;
-  --color-on-primary-container: #f8f7ff;
-  --color-surface: #faf8fe;
+  --color-primary: #0063d1;
+  --color-primary-container: #004ca3;
+  --color-on-primary-container: #dde6ff;
+  --color-surface: #fcf9f8;
   --color-surface-container-lowest: #ffffff;
-  --color-on-surface: #1a1b1f;
-  --color-on-surface-variant: #424656;
-  --color-outline-variant: #c2c6d8;
-  --color-outline: #727687;
+  --color-on-surface: #1b1c1c;
+  --color-on-surface-variant: #424753;
+  --color-outline-variant: #c2c6d5;
+  --color-outline: #727785;
   --color-error: #ba1a1a;
   --color-error-container: #ffdad6;
   --color-on-error-container: #93000a;
+  
+  --color-secondary: #3b6a00;
+  --color-secondary-container: #a8f858;
+  --color-on-secondary-container: #3f7100;
+  --color-deal-yellow: #FFD200;
+  --color-tertiary-pink: #ff4d8d;
 
   /* Text / Background semantic colors */
-  --color-on-background: #1a1b1f;
+  --color-on-background: #1b1c1c;
   --color-on-primary: #ffffff;
   --color-on-secondary: #ffffff;
-  --color-surface-container: #f0eef4;
-  --color-surface-container-low: #f5f3f9;
-  --color-surface-container-high: #eae8ee;
-  --color-surface-dim: #dbd9df;
-  --color-surface-tint: #003da5;
-  --color-surface-variant: #e0e0e8;
+  --color-surface-container: #f0eded;
+  --color-surface-container-low: #f6f3f2;
+  --color-surface-container-high: #eae7e7;
+  --color-surface-dim: #dcd9d9;
+  --color-surface-tint: #005bc0;
+  --color-surface-variant: #e5e2e1;
 
   /* Fonts */
-  --font-h1: Inter, sans-serif;
-  --font-h2: Inter, sans-serif;
-  --font-h3: Inter, sans-serif;
-  --font-h4: Inter, sans-serif;
-  --font-body-lg: Inter, sans-serif;
-  --font-body-md: Inter, sans-serif;
-  --font-label-sm: Inter, sans-serif;
-  --font-button: Inter, sans-serif;
+  --font-h1: Rubik, sans-serif;
+  --font-h2: Rubik, sans-serif;
+  --font-h3: Rubik, sans-serif;
+  --font-h4: Rubik, sans-serif;
+  --font-body-lg: Rubik, sans-serif;
+  --font-body-md: Rubik, sans-serif;
+  --font-label-sm: Rubik, sans-serif;
+  --font-button: Rubik, sans-serif;
 
   /* Spacing */
   --spacing-unit: 4px;

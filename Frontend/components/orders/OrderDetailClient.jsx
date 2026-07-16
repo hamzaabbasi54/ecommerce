@@ -72,23 +72,23 @@ export default function OrderDetailClient({ orderId }) {
   }
 
   return (
-    <main className="flex-grow w-full max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-xl">
-      <div className="mb-lg flex flex-col md:flex-row md:items-center md:justify-between gap-md">
+    <main className="flex-grow w-full max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-4">
+      <div className="mb-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3 border-b border-surface-variant pb-3">
         <div>
-          <h1 className="font-h2 text-h2 text-on-background flex items-center gap-sm">
+          <h1 className="text-xl font-bold text-on-background flex items-center gap-2">
             <Link href="/products" className="text-muted-foreground hover:text-primary transition-colors flex items-center">
-              <span className="material-symbols-outlined text-[24px]">arrow_back</span>
+              <span className="material-symbols-outlined text-[20px]">arrow_back</span>
             </Link>
             Order #{order.id.substring(0, 8).toUpperCase()}
           </h1>
-          <p className="font-body-md text-body-md text-muted-foreground mt-sm">
+          <p className="text-xs text-muted-foreground mt-1 ml-7">
             Placed on {new Intl.DateTimeFormat('en-US', { month: 'long', day: 'numeric', year: 'numeric' }).format(new Date(order.createdAt))}
           </p>
         </div>
-        <div className="flex items-center gap-sm">
-          <div className="inline-flex items-center gap-xs px-md py-sm bg-surface-container border border-surface-variant rounded-full w-fit">
-            <span className={`w-2 h-2 rounded-full ${order.status === 'pending' ? 'bg-amber-500' : order.status === 'cancelled' ? 'bg-red-500' : 'bg-green-500'}`}></span>
-            <span className="font-label-sm text-label-sm capitalize text-on-surface-variant">
+        <div className="flex items-center gap-3">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-surface-container border border-surface-variant rounded-full w-fit">
+            <span className={`w-1.5 h-1.5 rounded-full ${order.status === 'pending' ? 'bg-amber-500' : order.status === 'cancelled' ? 'bg-red-500' : 'bg-green-500'}`}></span>
+            <span className="text-xs font-medium capitalize text-on-surface-variant">
               {order.status}
             </span>
           </div>
@@ -96,7 +96,7 @@ export default function OrderDetailClient({ orderId }) {
             <button
               onClick={handleCancelOrder}
               disabled={isCancelling}
-              className="bg-transparent border border-error text-error px-md py-sm rounded-full font-button text-button hover:bg-error/10 transition-colors disabled:opacity-50"
+              className="bg-transparent border border-error text-error px-3 py-1 rounded-full text-xs font-medium hover:bg-error/10 transition-colors disabled:opacity-50 cursor-pointer"
             >
               {isCancelling ? 'Cancelling...' : 'Cancel Order'}
             </button>
@@ -104,17 +104,17 @@ export default function OrderDetailClient({ orderId }) {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-xl relative">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 relative items-start">
         {/* Left Column: Items */}
-        <div className="lg:col-span-8 flex flex-col gap-lg">
-          <section className="bg-surface-container-lowest border border-surface-variant p-lg rounded-lg">
-            <h2 className="font-h4 text-h4 text-on-background mb-md pb-sm border-b border-surface-variant">Items Ordered</h2>
-            <div className="flex flex-col gap-md">
+        <div className="lg:col-span-8 flex flex-col gap-4">
+          <section className="bg-surface-container-lowest border border-surface-variant p-4 rounded-lg">
+            <h2 className="text-base font-semibold text-on-background mb-3 pb-2 border-b border-surface-variant">Items Ordered</h2>
+            <div className="flex flex-col gap-2 max-h-[350px] overflow-y-auto pr-2">
               {order.items.map((item) => {
                 const product = item.product;
                 return (
-                  <div key={item.id} className="flex gap-md items-center py-sm border-b border-surface-variant last:border-0 last:pb-0">
-                    <div className="w-20 h-20 bg-surface border border-surface-variant rounded flex items-center justify-center overflow-hidden shrink-0">
+                  <div key={item.id} className="flex gap-3 items-center py-2 border-b border-surface-variant last:border-0 last:pb-0">
+                    <div className="w-12 h-12 bg-surface border border-surface-variant rounded flex items-center justify-center overflow-hidden shrink-0">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img 
                         src={product?.images?.[0] || '/placeholder.png'} 
@@ -123,13 +123,13 @@ export default function OrderDetailClient({ orderId }) {
                       />
                     </div>
                     <div className="flex-grow min-w-0">
-                      <Link href={`/products/${product?.slug}`} className="font-body-md text-body-md font-medium text-on-background hover:text-primary transition-colors truncate block" title={product?.name}>
+                      <Link href={`/products/${product?.slug}`} className="text-sm font-medium text-on-background hover:text-primary transition-colors truncate block" title={product?.name}>
                         {product?.name || 'Unknown Product'}
                       </Link>
-                      <p className="font-label-sm text-label-sm text-muted-foreground mt-xs">{product?.brand?.name}</p>
-                      <p className="font-label-sm text-label-sm text-on-surface-variant mt-xs">Qty: {item.quantity}</p>
+                      <p className="text-[10px] text-muted-foreground mt-0.5">{product?.brand?.name}</p>
+                      <p className="text-[10px] text-on-surface-variant mt-0.5">Qty: {item.quantity}</p>
                     </div>
-                    <div className="font-body-md text-body-md text-on-background text-right shrink-0">
+                    <div className="text-sm font-medium text-on-background text-right shrink-0">
                       ${(item.priceAtPurchase * item.quantity).toFixed(2)}
                     </div>
                   </div>
@@ -139,57 +139,64 @@ export default function OrderDetailClient({ orderId }) {
           </section>
         </div>
 
-        {/* Right Column: Order Summary & Info */}
-        <div className="lg:col-span-4 flex flex-col gap-lg">
-          <section className="bg-surface-container-lowest border border-surface-variant p-lg rounded-lg">
-            <h2 className="font-h4 text-h4 text-on-background mb-md pb-sm border-b border-surface-variant">Order Summary</h2>
-            <div className="flex flex-col gap-sm mb-lg">
-              <div className="flex justify-between items-center font-body-md text-body-md text-on-surface-variant">
-                <span>Subtotal</span>
-                <span className="text-on-background">${order.subtotal.toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between items-center font-body-md text-body-md text-on-surface-variant">
-                <span>Shipping</span>
-                <span className="text-on-background">{order.shippingCharge === 0 ? 'Free' : `$${order.shippingCharge.toFixed(2)}`}</span>
-              </div>
-              <div className="flex justify-between items-center font-body-md text-body-md text-on-surface-variant">
-                <span>Estimated Tax</span>
-                <span className="text-on-background">${order.tax.toFixed(2)}</span>
-              </div>
-              {order.discount > 0 && (
-                <div className="flex justify-between items-center font-body-md text-body-md text-green-600">
-                  <span>Discount</span>
-                  <span>-${order.discount.toFixed(2)}</span>
+        {/* Right Column: Combined Order Summary & Info */}
+        <div className="lg:col-span-4">
+          <section className="bg-surface-container-lowest border border-surface-variant p-4 rounded-lg flex flex-col gap-4 lg:sticky lg:top-24">
+            
+            {/* Order Summary */}
+            <div>
+              <h2 className="text-sm font-semibold text-on-background mb-2 pb-1 border-b border-surface-variant">Order Summary</h2>
+              <div className="flex flex-col gap-1.5 mb-2">
+                <div className="flex justify-between items-center text-xs text-on-surface-variant">
+                  <span>Subtotal</span>
+                  <span className="text-on-background">${order.subtotal.toFixed(2)}</span>
                 </div>
+                <div className="flex justify-between items-center text-xs text-on-surface-variant">
+                  <span>Shipping</span>
+                  <span className="text-on-background">{order.shippingCharge === 0 ? 'Free' : `$${order.shippingCharge.toFixed(2)}`}</span>
+                </div>
+                <div className="flex justify-between items-center text-xs text-on-surface-variant">
+                  <span>Estimated Tax</span>
+                  <span className="text-on-background">${order.tax.toFixed(2)}</span>
+                </div>
+                {order.discount > 0 && (
+                  <div className="flex justify-between items-center text-xs text-green-600">
+                    <span>Discount</span>
+                    <span>-${order.discount.toFixed(2)}</span>
+                  </div>
+                )}
+              </div>
+              <div className="flex justify-between items-center text-base font-bold text-on-background pt-2 border-t border-surface-variant">
+                <span>Total</span>
+                <span>${order.total.toFixed(2)}</span>
+              </div>
+            </div>
+
+            {/* Shipping Details */}
+            <div>
+              <h2 className="text-sm font-semibold text-on-background mb-2 pb-1 border-b border-surface-variant">Shipping Details</h2>
+              {order.address ? (
+                <div className="text-xs text-on-surface-variant flex flex-col gap-1">
+                  <span className="font-medium text-on-background">{order.address.street}</span>
+                  <span>{order.address.city}, {order.address.province} {order.address.postalCode}</span>
+                  <span>{order.address.country}</span>
+                </div>
+              ) : (
+                <span className="text-xs text-muted-foreground">No shipping details provided.</span>
               )}
             </div>
-            <div className="flex justify-between items-center font-h3 text-h3 text-on-background mb-md pt-md border-t border-surface-variant">
-              <span>Total</span>
-              <span>${order.total.toFixed(2)}</span>
-            </div>
-          </section>
 
-          <section className="bg-surface-container-lowest border border-surface-variant p-lg rounded-lg">
-            <h2 className="font-h4 text-h4 text-on-background mb-md pb-sm border-b border-surface-variant">Shipping Details</h2>
-            {order.address ? (
-              <div className="font-body-md text-body-md text-on-surface-variant flex flex-col gap-xs">
-                <span className="font-medium text-on-background">{order.address.street}</span>
-                <span>{order.address.city}, {order.address.province} {order.address.postalCode}</span>
-                <span>{order.address.country}</span>
+            {/* Payment Method */}
+            <div>
+              <h2 className="text-sm font-semibold text-on-background mb-2 pb-1 border-b border-surface-variant">Payment Method</h2>
+              <div className="flex items-center gap-1.5 text-xs text-on-surface-variant p-2 bg-surface-container rounded border border-surface-variant">
+                <span className="material-symbols-outlined text-[16px] text-primary" style={{fontVariationSettings: "'FILL' 1"}}>
+                  {order.paymentMethod === 'cod' ? 'local_shipping' : 'credit_card'}
+                </span>
+                <span className="capitalize font-medium">{order.paymentMethod === 'cod' ? 'Cash on Delivery' : order.paymentMethod.replace('_', ' ')}</span>
               </div>
-            ) : (
-              <span className="text-muted-foreground">No shipping details provided.</span>
-            )}
-          </section>
-
-          <section className="bg-surface-container-lowest border border-surface-variant p-lg rounded-lg">
-            <h2 className="font-h4 text-h4 text-on-background mb-md pb-sm border-b border-surface-variant">Payment Method</h2>
-            <div className="flex items-center gap-sm font-body-md text-body-md text-on-surface-variant">
-              <span className="material-symbols-outlined text-[20px]" style={{fontVariationSettings: "'FILL' 1"}}>
-                {order.paymentMethod === 'cod' ? 'local_shipping' : 'credit_card'}
-              </span>
-              <span className="capitalize">{order.paymentMethod === 'cod' ? 'Cash on Delivery' : order.paymentMethod.replace('_', ' ')}</span>
             </div>
+
           </section>
         </div>
       </div>

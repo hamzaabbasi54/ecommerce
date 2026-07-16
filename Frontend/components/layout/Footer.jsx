@@ -46,6 +46,7 @@ export default function Footer() {
             <div className="space-y-6 min-w-[150px]">
               <h3 className="text-sm font-semibold tracking-wider uppercase text-on-surface">Support</h3>
               <ul className="space-y-4 text-sm text-muted-foreground">
+                <li><Link href="/track-order" className="hover:text-primary transition-colors">Track Order</Link></li>
                 <li><Link href="/support/privacy-policy" className="hover:text-primary transition-colors">Privacy Policy</Link></li>
                 <li><Link href="/support/terms" className="hover:text-primary transition-colors">Terms of Service</Link></li>
                 <li><Link href="/support/shipping" className="hover:text-primary transition-colors">Shipping & Returns</Link></li>

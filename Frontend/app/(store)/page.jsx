@@ -3,6 +3,7 @@ import Hero from '@/components/home/Hero';
 import FeaturedCategories from '@/components/home/FeaturedCategories';
 import ProductGrid from '@/components/home/ProductGrid';
 import BrandsShowcase from '@/components/home/BrandsShowcase';
+import SpecialOffersCarousel from '@/components/home/SpecialOffersCarousel';
 
 export const metadata = {
   title: 'Electronica | Premium Electronics & Tech',
@@ -17,10 +18,10 @@ export default async function HomePage() {
     specialOffers,
     brands
   ] = await Promise.all([
-    // 1. Fetch top 3 categories
+    // 1. Fetch top 4 categories for Bento Grid
     prisma.category.findMany({
       where: { parentId: null }, // Top level categories
-      take: 3,
+      take: 4,
       orderBy: { name: 'asc' }
     }),
     
@@ -69,7 +70,7 @@ export default async function HomePage() {
       
       {/* Special Offers (On Sale) */}
       {specialOffers.length > 0 && (
-        <ProductGrid title="Special Offers" products={specialOffers} />
+        <SpecialOffersCarousel products={specialOffers} />
       )}
     </div>
   );

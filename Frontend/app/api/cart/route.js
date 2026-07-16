@@ -1,12 +1,13 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { verifyAuth } from '@/lib/auth';
+import { verifyOptionalAuth, getOrCreateGuest, refreshGuestCookie } from '@/lib/auth';
 
-// Helper function to get or create a cart for the logged-in user
-const getOrCreateCart = async (userId) => {
-  let cart = await prisma.cart.findUnique({ where: { userId } });
+// Helper function to get or create a cart for the current identity (user or guest)
+const getOrCreateCart = async ({ userId, guestId }) => {
+  const where = userId ? { userId } : { guestId };
+  let cart = await prisma.cart.findUnique({ where });
   if (!cart) {
-    cart = await prisma.cart.create({ data: { userId } });
+    cart = await prisma.cart.create({ data: where });
   }
   return cart;
 };
@@ -14,7 +15,21 @@ const getOrCreateCart = async (userId) => {
 // POST /api/cart
 export async function POST(request) {
   try {
-    const user = await verifyAuth(request);
+    let { user, guest } = await verifyOptionalAuth(request);
+    let guestCookieHeader = null;
+
+    // Auto-create guest on first write if no identity present
+    if (!user && !guest) {
+      const result = await getOrCreateGuest(request);
+      guest = result.guest;
+      guestCookieHeader = result.cookieHeader;
+    }
+
+    // Rolling refresh for existing guest
+    if (guest && !guestCookieHeader) {
+      guestCookieHeader = await refreshGuestCookie(guest);
+    }
+
     const { productId, quantity } = await request.json();
     const requestedQuantity = parseInt(quantity) || 1;
 
@@ -47,7 +62,8 @@ export async function POST(request) {
       );
     }
 
-    const cart = await getOrCreateCart(user.id);
+    const ownerId = user ? { userId: user.id } : { guestId: guest.id };
+    const cart = await getOrCreateCart(ownerId);
 
     const existingCartItem = await prisma.cartItem.findFirst({
       where: { cartId: cart.id, productId },
@@ -73,7 +89,11 @@ export async function POST(request) {
       });
     }
 
-    return NextResponse.json({ success: true, message: 'Item added to cart successfully' });
+    const response = NextResponse.json({ success: true, message: 'Item added to cart successfully' });
+    if (guestCookieHeader) {
+      response.headers.set('Set-Cookie', guestCookieHeader);
+    }
+    return response;
   } catch (error) {
     if (error instanceof Response) return error;
     console.error('Error in addToCart:', error.message);
@@ -87,10 +107,26 @@ export async function POST(request) {
 // GET /api/cart
 export async function GET(request) {
   try {
-    const user = await verifyAuth(request);
+    const { user, guest } = await verifyOptionalAuth(request);
+    let guestCookieHeader = null;
 
+    // Rolling refresh for existing guest
+    if (guest) {
+      guestCookieHeader = await refreshGuestCookie(guest);
+    }
+
+    // No identity — return empty cart (no error)
+    if (!user && !guest) {
+      return NextResponse.json({
+        success: true,
+        message: 'Cart is empty',
+        data: { items: [], cartTotal: 0 },
+      });
+    }
+
+    const where = user ? { userId: user.id } : { guestId: guest.id };
     const cart = await prisma.cart.findUnique({
-      where: { userId: user.id },
+      where,
       include: {
         items: {
           include: {
@@ -107,11 +143,15 @@ export async function GET(request) {
     });
 
     if (!cart) {
-      return NextResponse.json({
+      const emptyResponse = NextResponse.json({
         success: true,
         message: 'Cart is empty',
         data: { items: [], cartTotal: 0 },
       });
+      if (guestCookieHeader) {
+        emptyResponse.headers.set('Set-Cookie', guestCookieHeader);
+      }
+      return emptyResponse;
     }
 
     let cartTotal = 0;
@@ -119,11 +159,15 @@ export async function GET(request) {
       cartTotal += item.priceAtAdd * item.quantity;
     });
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       success: true,
       message: 'Cart fetched successfully',
       data: { ...cart, cartTotal },
     });
+    if (guestCookieHeader) {
+      response.headers.set('Set-Cookie', guestCookieHeader);
+    }
+    return response;
   } catch (error) {
     if (error instanceof Response) return error;
     console.error('Error in getCart:', error.message);

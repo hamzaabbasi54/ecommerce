@@ -170,160 +170,152 @@ export default function CheckoutClient() {
   }
 
   return (
-    <main className="flex-grow w-full max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-xl">
-      <div className="mb-lg">
-        <h1 className="font-h2 text-h2 text-on-background">Secure Checkout</h1>
-        <p className="font-body-md text-body-md text-muted-foreground mt-sm">Complete your purchase with precision.</p>
+    <main className="flex-grow w-full max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-4">
+      <div className="mb-4 border-b border-surface-variant pb-2 flex items-center justify-between">
+        <h1 className="text-xl font-bold text-on-background">Secure Checkout</h1>
       </div>
 
       {submitError && (
-        <div className="mb-lg p-md bg-error-container text-on-error-container rounded border border-error/20">
+        <div className="mb-4 p-2 bg-error-container text-on-error-container rounded border border-error/20 text-xs">
           {submitError}
         </div>
       )}
 
-      <form onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-1 lg:grid-cols-12 gap-xl relative">
-        {/* Left Column: Forms */}
-        <div className="lg:col-span-7 flex flex-col gap-lg">
-          
-          {/* Contact Section */}
-          <section className="bg-surface-container-lowest border border-surface-variant p-lg rounded-lg">
-            <h2 className="font-h4 text-h4 text-on-background mb-md">Contact Information</h2>
-            <div className="flex flex-col gap-md">
+      <form onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-1 lg:grid-cols-12 gap-6 relative items-start">
+        {/* Left Column: Unified Form */}
+        <div className="lg:col-span-7">
+          <section className="bg-surface-container-lowest border border-surface-variant p-4 rounded-lg flex flex-col gap-4">
+            
+            {/* Customer Details Row */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div>
-                <label className="block font-label-sm text-label-sm text-on-surface-variant mb-xs" htmlFor="email">Email Address</label>
-                <input 
-                  {...register("email")}
-                  className={`w-full bg-surface border ${errors.email ? 'border-error' : 'border-outline-variant'} rounded p-sm font-body-md text-body-md text-on-background transition-colors`} 
-                  id="email" 
-                  placeholder="user@example.com" 
-                  type="email"
-                />
-                {errors.email && <p className="text-error text-sm mt-1">{errors.email.message}</p>}
-              </div>
-              <div className="flex items-center gap-sm mt-xs">
-                <input className="w-4 h-4 text-primary border-outline-variant rounded accent-primary cursor-pointer" id="newsletter" type="checkbox" />
-                <label className="font-body-md text-body-md text-muted-foreground cursor-pointer" htmlFor="newsletter">Email me with news and offers</label>
-              </div>
-            </div>
-          </section>
-
-          {/* Shipping Section */}
-          <section className="bg-surface-container-lowest border border-surface-variant p-lg rounded-lg">
-            <h2 className="font-h4 text-h4 text-on-background mb-md">Shipping Address</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-md mb-md">
-              <div>
-                <label className="block font-label-sm text-label-sm text-on-surface-variant mb-xs" htmlFor="firstName">First Name</label>
+                <label className="block text-xs font-semibold text-on-surface-variant mb-1" htmlFor="firstName">First Name <span className="text-error">*</span></label>
                 <input 
                   {...register("firstName")}
-                  className={`w-full bg-surface border ${errors.firstName ? 'border-error' : 'border-outline-variant'} rounded p-sm font-body-md text-body-md text-on-background transition-colors`} 
+                  className={`w-full bg-surface border ${errors.firstName ? 'border-error' : 'border-outline-variant'} rounded px-2.5 py-1.5 text-xs text-on-background transition-colors`} 
                   id="firstName" type="text"
                 />
-                {errors.firstName && <p className="text-error text-sm mt-1">{errors.firstName.message}</p>}
+                {errors.firstName && <p className="text-error text-[10px] mt-0.5">{errors.firstName.message}</p>}
               </div>
               <div>
-                <label className="block font-label-sm text-label-sm text-on-surface-variant mb-xs" htmlFor="lastName">Last Name</label>
+                <label className="block text-xs font-semibold text-on-surface-variant mb-1" htmlFor="lastName">Last Name <span className="text-error">*</span></label>
                 <input 
                   {...register("lastName")}
-                  className={`w-full bg-surface border ${errors.lastName ? 'border-error' : 'border-outline-variant'} rounded p-sm font-body-md text-body-md text-on-background transition-colors`} 
+                  className={`w-full bg-surface border ${errors.lastName ? 'border-error' : 'border-outline-variant'} rounded px-2.5 py-1.5 text-xs text-on-background transition-colors`} 
                   id="lastName" type="text"
                 />
-                {errors.lastName && <p className="text-error text-sm mt-1">{errors.lastName.message}</p>}
+                {errors.lastName && <p className="text-error text-[10px] mt-0.5">{errors.lastName.message}</p>}
+              </div>
+            </div>
+
+            {/* Email & Newsletter Row */}
+            <div className="flex flex-col md:flex-row md:items-end gap-3">
+              <div className="flex-grow">
+                <label className="block text-xs font-semibold text-on-surface-variant mb-1" htmlFor="email">Email Address <span className="text-error">*</span></label>
+                <input 
+                  {...register("email")}
+                  className={`w-full bg-surface border ${errors.email ? 'border-error' : 'border-outline-variant'} rounded px-2.5 py-1.5 text-xs text-on-background transition-colors`} 
+                  id="email" placeholder="user@example.com" type="email"
+                />
+                {errors.email && <p className="text-error text-[10px] mt-0.5">{errors.email.message}</p>}
+              </div>
+              <div className="flex items-center gap-1.5 pb-1.5 shrink-0">
+                <input className="w-3.5 h-3.5 text-primary border-outline-variant rounded accent-primary cursor-pointer" id="newsletter" type="checkbox" />
+                <label className="text-xs text-muted-foreground cursor-pointer" htmlFor="newsletter">Email me with news and offers</label>
+              </div>
+            </div>
+
+            {/* Address Row */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-semibold text-on-surface-variant mb-1" htmlFor="address">Street Address <span className="text-error">*</span></label>
+                <input 
+                  {...register("street")}
+                  className={`w-full bg-surface border ${errors.street ? 'border-error' : 'border-outline-variant'} rounded px-2.5 py-1.5 text-xs text-on-background transition-colors`} 
+                  id="address" type="text"
+                />
+                {errors.street && <p className="text-error text-[10px] mt-0.5">{errors.street.message}</p>}
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-on-surface-variant mb-1" htmlFor="city">City <span className="text-error">*</span></label>
+                <input 
+                  {...register("city")}
+                  className={`w-full bg-surface border ${errors.city ? 'border-error' : 'border-outline-variant'} rounded px-2.5 py-1.5 text-xs text-on-background transition-colors`} 
+                  id="city" type="text"
+                />
+                {errors.city && <p className="text-error text-[10px] mt-0.5">{errors.city.message}</p>}
+              </div>
+            </div>
+
+            {/* Location Row */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-semibold text-on-surface-variant mb-1" htmlFor="postalCode">Postal Code <span className="text-error">*</span></label>
+                <input 
+                  {...register("postalCode")}
+                  className={`w-full bg-surface border ${errors.postalCode ? 'border-error' : 'border-outline-variant'} rounded px-2.5 py-1.5 text-xs text-on-background transition-colors`} 
+                  id="postalCode" type="text"
+                />
+                {errors.postalCode && <p className="text-error text-[10px] mt-0.5">{errors.postalCode.message}</p>}
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-on-surface-variant mb-1" htmlFor="country">Country <span className="text-error">*</span></label>
+                <select 
+                  {...register("country")}
+                  className={`w-full bg-surface border ${errors.country ? 'border-error' : 'border-outline-variant'} rounded px-2.5 py-1.5 text-xs text-on-background transition-colors appearance-none cursor-pointer`} 
+                  id="country"
+                >
+                  <option value="United States">United States</option>
+                  <option value="Canada">Canada</option>
+                  <option value="United Kingdom">United Kingdom</option>
+                  <option value="Germany">Germany</option>
+                </select>
+                {errors.country && <p className="text-error text-[10px] mt-0.5">{errors.country.message}</p>}
+              </div>
+            </div>
+
+            {/* Payment Row */}
+            <div className="pt-2 border-t border-surface-variant mt-1">
+              <label className="block text-xs font-semibold text-on-surface-variant mb-2">Payment Method</label>
+              <input type="hidden" {...register("paymentMethod")} value="cod" />
+              <div className="flex items-center gap-2 p-2 bg-surface-container rounded border border-primary text-sm font-medium">
+                <span className="material-symbols-outlined text-[16px] text-primary" style={{fontVariationSettings: "'FILL' 1"}}>local_shipping</span>
+                <span>Cash on Delivery (COD)</span>
+                <span className="material-symbols-outlined text-primary text-[16px] ml-auto" style={{fontVariationSettings: "'FILL' 1"}}>check_circle</span>
               </div>
             </div>
             
-            <div className="mb-md">
-              <label className="block font-label-sm text-label-sm text-on-surface-variant mb-xs" htmlFor="address">Street Address</label>
-              <input 
-                {...register("street")}
-                className={`w-full bg-surface border ${errors.street ? 'border-error' : 'border-outline-variant'} rounded p-sm font-body-md text-body-md text-on-background transition-colors`} 
-                id="address" type="text"
-              />
-              {errors.street && <p className="text-error text-sm mt-1">{errors.street.message}</p>}
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-md mb-md">
-              <div className="md:col-span-2">
-                <label className="block font-label-sm text-label-sm text-on-surface-variant mb-xs" htmlFor="city">City</label>
-                <input 
-                  {...register("city")}
-                  className={`w-full bg-surface border ${errors.city ? 'border-error' : 'border-outline-variant'} rounded p-sm font-body-md text-body-md text-on-background transition-colors`} 
-                  id="city" type="text"
-                />
-                {errors.city && <p className="text-error text-sm mt-1">{errors.city.message}</p>}
-              </div>
-              <div>
-                <label className="block font-label-sm text-label-sm text-on-surface-variant mb-xs" htmlFor="postalCode">Postal Code</label>
-                <input 
-                  {...register("postalCode")}
-                  className={`w-full bg-surface border ${errors.postalCode ? 'border-error' : 'border-outline-variant'} rounded p-sm font-body-md text-body-md text-on-background transition-colors`} 
-                  id="postalCode" type="text"
-                />
-                {errors.postalCode && <p className="text-error text-sm mt-1">{errors.postalCode.message}</p>}
-              </div>
-            </div>
-
-            <div>
-              <label className="block font-label-sm text-label-sm text-on-surface-variant mb-xs" htmlFor="country">Country</label>
-              <select 
-                {...register("country")}
-                className={`w-full bg-surface border ${errors.country ? 'border-error' : 'border-outline-variant'} rounded p-sm font-body-md text-body-md text-on-background transition-colors appearance-none cursor-pointer`} 
-                id="country"
-              >
-                <option value="United States">United States</option>
-                <option value="Canada">Canada</option>
-                <option value="United Kingdom">United Kingdom</option>
-                <option value="Germany">Germany</option>
-              </select>
-              {errors.country && <p className="text-error text-sm mt-1">{errors.country.message}</p>}
-            </div>
-          </section>
-
-          {/* Payment Section - COD Only */}
-          <section className="bg-surface-container-lowest border border-surface-variant p-lg rounded-lg">
-            <h2 className="font-h4 text-h4 text-on-background mb-md">Payment Method</h2>
-            <input type="hidden" {...register("paymentMethod")} value="cod" />
-            <div className="flex items-center justify-between p-md border border-primary rounded bg-surface-container">
-              <div className="flex items-center gap-sm">
-                <span className="material-symbols-outlined text-[22px] text-primary" style={{fontVariationSettings: "'FILL' 1"}}>local_shipping</span>
-                <div>
-                  <span className="font-body-md text-body-md font-medium text-on-background">Cash on Delivery (COD)</span>
-                  <p className="font-label-sm text-label-sm text-muted-foreground mt-xs">Pay with cash when your order is delivered.</p>
-                </div>
-              </div>
-              <span className="material-symbols-outlined text-primary text-[22px]" style={{fontVariationSettings: "'FILL' 1"}}>check_circle</span>
-            </div>
           </section>
         </div>
 
         {/* Right Column: Order Summary */}
         <div className="lg:col-span-5">
-          <div className="bg-surface-container-lowest border border-surface-variant p-lg rounded-lg lg:sticky lg:top-32">
-            <h2 className="font-h4 text-h4 text-on-background mb-lg pb-sm border-b border-surface-variant">Order Summary</h2>
+          <div className="bg-surface-container-lowest border border-surface-variant p-4 rounded-lg lg:sticky lg:top-24 shadow-sm">
+            <h2 className="text-base font-semibold text-on-background mb-3 pb-1 border-b border-surface-variant">Order Summary</h2>
             
             {/* Cart Items Dynamic Listing */}
-            <div className="flex flex-col gap-md mb-lg max-h-80 overflow-y-auto pr-sm">
+            <div className="flex flex-col gap-2 mb-3 max-h-[160px] overflow-y-auto pr-1">
               {cartItems.map((item) => {
                 const product = item.product;
                 const price = product.discountPrice || product.price;
                 return (
-                  <div key={item.id} className="flex gap-md items-center">
-                    <div className="w-16 h-16 bg-surface border border-surface-variant rounded flex items-center justify-center overflow-hidden shrink-0 relative">
+                  <div key={item.id} className="flex gap-2 items-center">
+                    <div className="w-10 h-10 bg-surface border border-surface-variant rounded flex items-center justify-center overflow-hidden shrink-0 relative">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img 
                         src={product.images[0] || '/placeholder.png'} 
                         alt={product.name}
                         className="object-cover w-full h-full mix-blend-multiply" 
                       />
-                      <span className="absolute -top-2 -right-2 bg-secondary text-on-secondary w-5 h-5 rounded-full flex items-center justify-center font-label-sm text-label-sm text-[10px]">
+                      <span className="absolute -top-1 -right-1 bg-secondary text-on-secondary w-3.5 h-3.5 rounded-full flex items-center justify-center text-[8px] font-bold shadow-sm">
                         {item.quantity}
                       </span>
                     </div>
                     <div className="flex-grow min-w-0">
-                      <h3 className="font-body-md text-body-md font-medium text-on-background truncate" title={product.name}>{product.name}</h3>
-                      <p className="font-label-sm text-label-sm text-muted-foreground mt-xs truncate">{product.brand?.name || 'Electronica'}</p>
+                      <h3 className="text-xs font-medium text-on-background truncate" title={product.name}>{product.name}</h3>
+                      <p className="text-[10px] text-muted-foreground truncate">{product.brand?.name || 'Electronica'}</p>
                     </div>
-                    <div className="font-body-md text-body-md text-on-background text-right shrink-0">
+                    <div className="text-xs font-medium text-on-background text-right shrink-0">
                       ${(price * item.quantity).toFixed(2)}
                     </div>
                   </div>
@@ -332,14 +324,14 @@ export default function CheckoutClient() {
             </div>
 
             {/* Coupon Code */}
-            <div className="mb-lg border-y border-surface-variant py-md">
+            <div className="mb-3 border-y border-surface-variant py-2.5">
               {appliedCoupon ? (
-                <div className="flex items-center justify-between p-sm bg-primary/5 border border-primary/20 rounded">
-                  <div className="flex items-center gap-sm">
-                    <span className="material-symbols-outlined text-primary text-[18px]" style={{fontVariationSettings: "'FILL' 1"}}>confirmation_number</span>
+                <div className="flex items-center justify-between p-1.5 bg-primary/5 border border-primary/20 rounded">
+                  <div className="flex items-center gap-1.5">
+                    <span className="material-symbols-outlined text-primary text-[14px]" style={{fontVariationSettings: "'FILL' 1"}}>confirmation_number</span>
                     <div>
-                      <span className="font-body-md text-body-md font-medium text-on-background">{appliedCoupon.code}</span>
-                      <p className="font-label-sm text-label-sm text-primary">
+                      <span className="text-xs font-medium text-on-background">{appliedCoupon.code}</span>
+                      <p className="text-[10px] text-primary">
                         {appliedCoupon.discountType === 'percentage' 
                           ? `${appliedCoupon.discountValue}% off` 
                           : `$${appliedCoupon.discountValue.toFixed(2)} off`}
@@ -349,17 +341,17 @@ export default function CheckoutClient() {
                   <button
                     type="button"
                     onClick={handleRemoveCoupon}
-                    className="text-muted-foreground hover:text-error transition-colors p-xs"
+                    className="text-muted-foreground hover:text-error transition-colors p-0.5"
                     title="Remove coupon"
                   >
-                    <span className="material-symbols-outlined text-[18px]">close</span>
+                    <span className="material-symbols-outlined text-[14px]">close</span>
                   </button>
                 </div>
               ) : (
                 <>
-                  <div className="flex gap-sm">
+                  <div className="flex gap-1.5">
                     <input
-                      className="flex-grow bg-surface border border-outline-variant rounded p-sm font-body-md text-body-md text-on-background transition-colors"
+                      className="flex-grow bg-surface border border-outline-variant rounded px-2 py-1 text-xs text-on-background transition-colors"
                       placeholder="Discount code"
                       type="text"
                       value={couponCode}
@@ -378,15 +370,15 @@ export default function CheckoutClient() {
                       type="button"
                       onClick={handleApplyCoupon}
                       disabled={couponLoading || !couponCode.trim()}
-                      className="bg-surface-container-high text-on-surface px-md py-sm rounded font-button text-button hover:bg-surface-dim transition-colors disabled:opacity-50 flex items-center gap-xs"
+                      className="bg-surface-container-high text-on-surface px-3 py-1 rounded text-xs font-medium hover:bg-surface-dim transition-colors disabled:opacity-50 flex items-center gap-1"
                     >
-                      {couponLoading && <Loader2 className="w-4 h-4 animate-spin" />}
+                      {couponLoading && <Loader2 className="w-3 h-3 animate-spin" />}
                       Apply
                     </button>
                   </div>
                   {couponError && (
-                    <p className="text-error font-label-sm text-label-sm mt-sm flex items-center gap-xs">
-                      <span className="material-symbols-outlined text-[14px]">error</span>
+                    <p className="text-error text-[10px] mt-1 flex items-center gap-1">
+                      <span className="material-symbols-outlined text-[10px]">error</span>
                       {couponError}
                     </p>
                   )}
@@ -395,41 +387,47 @@ export default function CheckoutClient() {
             </div>
 
             {/* Breakdown */}
-            <div className="flex flex-col gap-sm mb-lg">
-              <div className="flex justify-between items-center font-body-md text-body-md text-on-surface-variant">
+            <div className="flex flex-col gap-1.5 mb-3">
+              <div className="flex justify-between items-center text-xs text-on-surface-variant">
                 <span>Subtotal</span>
                 <span className="text-on-background">${subtotal.toFixed(2)}</span>
               </div>
               {discount > 0 && (
-                <div className="flex justify-between items-center font-body-md text-body-md text-green-600">
+                <div className="flex justify-between items-center text-xs text-green-600">
                   <span>Discount</span>
                   <span>-${discount.toFixed(2)}</span>
                 </div>
               )}
-              <div className="flex justify-between items-center font-body-md text-body-md text-on-surface-variant">
+              <div className="flex justify-between items-center text-xs text-on-surface-variant">
                 <span>Shipping</span>
                 <span className="text-primary font-medium">Free</span>
               </div>
-              <div className="flex justify-between items-center font-body-md text-body-md text-on-surface-variant">
+              <div className="flex justify-between items-center text-xs text-on-surface-variant">
                 <span>Estimated Tax (8%)</span>
                 <span className="text-on-background">${tax.toFixed(2)}</span>
               </div>
             </div>
             
-            <div className="flex justify-between items-center font-h3 text-h3 text-on-background mb-lg pt-md border-t border-surface-variant">
+            <div className="flex justify-between items-center text-base font-bold text-on-background mb-3 pt-2 border-t border-surface-variant">
               <span>Total</span>
               <span>${total.toFixed(2)}</span>
             </div>
 
             {/* Submit Action */}
+            {Object.keys(errors).length > 0 && (
+              <div className="mb-2 p-1.5 bg-error-container/50 border border-error/20 rounded flex items-center gap-1.5 text-error text-xs">
+                <span className="material-symbols-outlined text-[14px]">error</span>
+                <span className="font-medium">Please fill in all required fields</span>
+              </div>
+            )}
             <button 
               type="submit" 
               disabled={isSubmitting}
-              className="w-full bg-primary text-on-primary py-md rounded-lg font-button text-button hover:bg-surface-tint active:scale-[0.98] transition-all flex items-center justify-center gap-sm disabled:opacity-50 disabled:active:scale-100"
+              className="w-full bg-primary text-on-primary py-2 rounded text-sm font-medium hover:bg-[#004ca3] active:scale-[0.98] transition-all flex items-center justify-center gap-1.5 disabled:opacity-50 disabled:active:scale-100 disabled:cursor-not-allowed cursor-pointer"
             >
-              {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : null}
+              {isSubmitting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : null}
               {isSubmitting ? 'Processing...' : 'Place Order'}
-              {!isSubmitting && <span className="material-symbols-outlined text-[18px]">arrow_forward</span>}
+              {!isSubmitting && <span className="material-symbols-outlined text-[14px]">arrow_forward</span>}
             </button>
           </div>
         </div>

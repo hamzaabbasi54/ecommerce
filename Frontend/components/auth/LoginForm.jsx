@@ -6,7 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, ShoppingBag, Shield, ArrowLeft } from 'lucide-react';
 
 import { login } from '@/services/authService';
 import useAuthStore from '@/context/useAuthStore';
@@ -26,6 +26,7 @@ export default function LoginForm() {
   const [apiError, setApiError] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [selectedRole, setSelectedRole] = useState('CUSTOMER');
 
   const { register, handleSubmit, formState: { errors }, } = useForm({ resolver: zodResolver(loginSchema),});
 
@@ -36,8 +37,23 @@ export default function LoginForm() {
     try {
       const response = await login(data);
       if (response.success) {
-        setUser(response.data);
-        router.push('/');
+        const userData = response.data;
+        
+        if (selectedRole === 'ADMIN') {
+          // Verify the user is actually an admin
+          if (userData.role !== 'ADMIN') {
+            setApiError('This account does not have admin privileges.');
+            setIsSubmitting(false);
+            return;
+          }
+          setUser(userData);
+          router.push('/admin');
+        } else {
+          // Customer login — block admins from customer portal if desired,
+          // or just let them in (admins can also be customers)
+          setUser(userData);
+          router.push('/');
+        }
       }
     } catch (error) {
       setApiError(error.message);
@@ -48,14 +64,54 @@ export default function LoginForm() {
 
   return (
     <div className="w-full max-w-[480px]">
+      {/* Back Button */}
+      <div className="mb-6 flex justify-center">
+        <Button variant="ghost" asChild className="text-muted-foreground hover:text-foreground">
+          <Link href="/">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Homepage
+          </Link>
+        </Button>
+      </div>
+
       {/* Brand / Header */}
       <div className="text-center mb-12">
-        <h1 className="text-3xl font-bold tracking-tighter text-primary">Electronica</h1>
+        <Link href="/" className="inline-block hover:opacity-80 transition-opacity">
+          <h1 className="text-3xl font-bold tracking-tighter text-primary">Electronica</h1>
+        </Link>
       </div>
 
       {/* Login Card */}
       <div className="bg-card text-card-foreground border rounded-lg shadow-sm p-8 md:p-12">
-        <h2 className="text-2xl font-semibold mb-8 text-center">Log In</h2>
+        <h2 className="text-2xl font-semibold mb-6 text-center">Log In</h2>
+
+        {/* Role Selector Tabs */}
+        <div className="flex rounded-lg bg-muted p-1 mb-8">
+          <button
+            type="button"
+            onClick={() => { setSelectedRole('CUSTOMER'); setApiError(null); }}
+            className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-md text-sm font-semibold transition-all cursor-pointer ${
+              selectedRole === 'CUSTOMER'
+                ? 'bg-white text-foreground shadow-sm'
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            <ShoppingBag className="h-4 w-4" />
+            Customer
+          </button>
+          <button
+            type="button"
+            onClick={() => { setSelectedRole('ADMIN'); setApiError(null); }}
+            className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-md text-sm font-semibold transition-all cursor-pointer ${
+              selectedRole === 'ADMIN'
+                ? 'bg-white text-foreground shadow-sm'
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            <Shield className="h-4 w-4" />
+            Admin
+          </button>
+        </div>
         
         {/* Global API Error Display */}
         {apiError && (
@@ -103,8 +159,8 @@ export default function LoginForm() {
           </div>
 
           <div className="pt-4">
-            <Button type="submit" className="w-full h-11 text-base font-medium" disabled={isSubmitting}>
-              {isSubmitting ? "Logging In..." : "Log In"}
+            <Button type="submit" className="w-full h-11 text-base font-medium cursor-pointer" disabled={isSubmitting}>
+              {isSubmitting ? "Logging In..." : selectedRole === 'ADMIN' ? "Log In as Admin" : "Log In"}
             </Button>
           </div>
         </form>
@@ -115,12 +171,14 @@ export default function LoginForm() {
             Forgot Password?
           </Link>
           
-          <div className="text-sm text-muted-foreground pt-4 border-t">
-            Don&apos;t have an account?{' '}
-            <Link href="/register" className="text-primary hover:underline font-medium">
-              Register
-            </Link>
-          </div>
+          {selectedRole === 'CUSTOMER' && (
+            <div className="text-sm text-muted-foreground pt-4 border-t">
+              Don&apos;t have an account?{' '}
+              <Link href="/register" className="text-primary hover:underline font-medium">
+                Register
+              </Link>
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -1,47 +1,41 @@
 "use client";
 
 import { useState } from 'react';
-import axios from 'axios';
 import { useRouter } from 'next/navigation';
-import { Search, ShieldAlert, ShieldCheck, Trash2 } from 'lucide-react';
+import { Search, Trash2, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
 
 export default function UserList({ initialUsers }) {
   const [users, setUsers] = useState(initialUsers);
   const [searchTerm, setSearchTerm] = useState('');
-  const [loadingId, setLoadingId] = useState(null);
+  const [deletingId, setDeletingId] = useState(null);
   const router = useRouter();
 
-  const handleRoleChange = async (userId, newRole) => {
-    if (confirm(`Are you sure you want to change this user to ${newRole}?`)) {
-      setLoadingId(userId);
-      try {
-        const response = await axios.put('/api/admin/users', { userId, role: newRole }, { withCredentials: true });
-        if (response.data.success) {
-          setUsers(users.map(u => u.id === userId ? response.data.data : u));
-          router.refresh();
-        }
-      } catch (err) {
-        alert(err.response?.data?.message || 'Error updating user role');
-      } finally {
-        setLoadingId(null);
-      }
-    }
-  };
-
   const handleDelete = async (userId) => {
-    if (confirm('Are you sure you want to permanently delete this user? This will also delete all their orders, reviews, and other data.')) {
-      try {
-        const response = await axios.delete(`/api/admin/users/${userId}`, { withCredentials: true });
-        if (response.data.success) {
-          setUsers(users.filter(u => u.id !== userId));
-          router.refresh();
-        }
-      } catch (err) {
-        alert(err.response?.data?.message || 'Error deleting user');
+    if (!confirm('Are you sure you want to permanently delete this user? This will also delete all their orders, reviews, and other data.')) {
+      return;
+    }
+
+    setDeletingId(userId);
+    try {
+      const res = await fetch(`/api/admin/users/${userId}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+      const data = await res.json();
+      
+      if (data.success) {
+        setUsers(users.filter(u => u.id !== userId));
+      } else {
+        alert(data.message || 'Error deleting user');
       }
+    } catch (err) {
+      alert('Network error while deleting user');
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -70,6 +64,7 @@ export default function UserList({ initialUsers }) {
             <tr>
               <th className="px-6 py-4 font-medium">User</th>
               <th className="px-6 py-4 font-medium">Contact</th>
+              <th className="px-6 py-4 font-medium">Role</th>
               <th className="px-6 py-4 font-medium">Stats</th>
               <th className="px-6 py-4 font-medium">Joined</th>
               <th className="px-6 py-4 font-medium text-right">Actions</th>
@@ -78,7 +73,7 @@ export default function UserList({ initialUsers }) {
           <tbody>
             {filteredUsers.length === 0 ? (
               <tr>
-                <td colSpan="5" className="px-6 py-8 text-center text-muted-foreground">
+                <td colSpan="6" className="px-6 py-8 text-center text-muted-foreground">
                   No users found.
                 </td>
               </tr>
@@ -100,6 +95,15 @@ export default function UserList({ initialUsers }) {
                     <div className="text-muted-foreground text-xs">{user.phone || '-'}</div>
                   </td>
                   <td className="px-6 py-4">
+                    <Badge variant={user.role === 'ADMIN' ? 'default' : 'secondary'} className={
+                      user.role === 'ADMIN' 
+                        ? 'bg-primary/10 text-primary border-primary/20 hover:bg-primary/10' 
+                        : ''
+                    }>
+                      {user.role}
+                    </Badge>
+                  </td>
+                  <td className="px-6 py-4">
                     <div className="text-xs">
                       Orders: <span className="font-medium text-foreground">{user._count.orders}</span>
                     </div>
@@ -110,22 +114,20 @@ export default function UserList({ initialUsers }) {
                   <td className="px-6 py-4 text-muted-foreground">
                     {new Date(user.createdAt).toLocaleDateString()}
                   </td>
-                  <td className="px-6 py-4 text-right flex items-center justify-end gap-2">
-                    <select
-                      value={user.role}
-                      onChange={(e) => handleRoleChange(user.id, e.target.value)}
-                      disabled={loadingId === user.id}
-                      className={`text-sm rounded-md border px-2 py-1 ${
-                        user.role === 'ADMIN' 
-                        ? 'bg-primary/10 text-primary border-primary/20 font-semibold' 
-                        : 'bg-surface-container border-border text-foreground'
-                      }`}
+                  <td className="px-6 py-4 text-right">
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      onClick={() => handleDelete(user.id)} 
+                      disabled={deletingId === user.id}
+                      title="Delete user"
+                      className="cursor-pointer"
                     >
-                      <option value="USER">USER</option>
-                      <option value="ADMIN">ADMIN</option>
-                    </select>
-                    <Button variant="ghost" size="icon" onClick={() => handleDelete(user.id)} title="Delete user">
-                      <Trash2 className="w-4 h-4 text-muted-foreground hover:text-destructive transition-colors" />
+                      {deletingId === user.id ? (
+                        <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+                      ) : (
+                        <Trash2 className="w-4 h-4 text-muted-foreground hover:text-destructive transition-colors" />
+                      )}
                     </Button>
                   </td>
                 </tr>

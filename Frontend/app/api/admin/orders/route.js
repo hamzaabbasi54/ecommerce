@@ -11,12 +11,16 @@ export async function GET(request) {
       orderBy: { createdAt: 'desc' },
       include: {
         user: { select: { id: true, name: true, email: true } },
+        guest: { select: { id: true } },
         address: true,
         items: {
           include: {
             product: { select: { id: true, name: true, images: true } }
           }
-        }
+        },
+        returnRequests: {
+          orderBy: { createdAt: 'desc' },
+        },
       }
     });
 
@@ -43,17 +47,27 @@ export async function PUT(request) {
       return NextResponse.json({ success: false, message: 'Invalid status' }, { status: 400 });
     }
 
+    // Auto-set deliveredAt when marking as delivered
+    const updateData = { status };
+    if (status === 'delivered') {
+      updateData.deliveredAt = new Date();
+    }
+
     const order = await prisma.order.update({
       where: { id: orderId },
-      data: { status },
+      data: updateData,
       include: {
         user: { select: { id: true, name: true, email: true } },
+        guest: { select: { id: true } },
         address: true,
         items: {
           include: {
             product: { select: { id: true, name: true, images: true } }
           }
-        }
+        },
+        returnRequests: {
+          orderBy: { createdAt: 'desc' },
+        },
       }
     });
 

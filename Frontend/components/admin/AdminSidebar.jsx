@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Package, Tags, Briefcase, Users, ShoppingCart, Ticket, Star } from 'lucide-react';
+import { LayoutDashboard, Package, Tags, Briefcase, Users, ShoppingCart, Ticket, Star, Settings } from 'lucide-react';
 
 export default function AdminSidebar() {
   const pathname = usePathname();
@@ -16,6 +16,7 @@ export default function AdminSidebar() {
     { name: 'Orders', href: '/admin/orders', icon: ShoppingCart },
     { name: 'Coupons', href: '/admin/coupons', icon: Ticket },
     { name: 'Reviews', href: '/admin/reviews', icon: Star },
+    { name: 'Settings', href: '/admin/settings', icon: Settings },
   ];
 
   return (

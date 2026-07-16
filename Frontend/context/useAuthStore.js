@@ -35,10 +35,7 @@ const useAuthStore = create((set) => ({
       // Clear local state regardless of API success/failure 
       set({ user: null, isAuthenticated: false });
       
-      // Redirect to login page
-      if (typeof window !== 'undefined') {
-        window.location.href = '/login';
-      }
+      // We no longer redirect to /login to allow the user to stay on the current page
     }
   },
 }));

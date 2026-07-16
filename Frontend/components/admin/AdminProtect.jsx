@@ -20,8 +20,8 @@ export default function AdminProtect({ children }) {
 
   if (loading || !isAuthenticated || !user || user.role !== 'ADMIN') {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <span className="material-symbols-outlined animate-spin text-4xl text-primary">sync</span>
+      <div className="min-h-screen flex items-center justify-center bg-[#0f172a]">
+        <span className="material-symbols-outlined animate-spin text-4xl text-blue-400">sync</span>
       </div>
     );
   }

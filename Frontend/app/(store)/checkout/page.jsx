@@ -11,11 +11,12 @@ export const metadata = {
 
 export default async function CheckoutPage() {
   // We can do a quick server-side check for auth.
-  // If not authenticated, redirect to /login?redirect=/checkout
+  // If not authenticated and no guest token exists, redirect to /login?redirect=/checkout
   const cookieStore = await cookies();
   const token = cookieStore.get('token');
+  const guestToken = cookieStore.get('guest_token');
 
-  if (!token) {
+  if (!token && !guestToken) {
     redirect('/login?redirect=/checkout');
   }
 

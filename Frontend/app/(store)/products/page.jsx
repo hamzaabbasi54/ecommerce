@@ -23,6 +23,9 @@ export default async function ProductsPage(props) {
   const sort = searchParams.sort || 'newest';
   const sale = searchParams.sale === 'true';
   const searchQuery = searchParams.search || null;
+  const page = parseInt(searchParams.page) || 1;
+  const take = 9;
+  const skip = (page - 1) * take;
 
   // Build the Prisma query
   const where = {
@@ -59,18 +62,30 @@ export default async function ProductsPage(props) {
   }
 
   // Fetch data in parallel
-  const [products, categories, brands] = await Promise.all([
+  const [products, totalProducts, categories, brands] = await Promise.all([
     prisma.product.findMany({
       where,
       orderBy,
+      skip,
+      take,
       include: {
         brand: true,
         category: true,
       },
     }),
+    prisma.product.count({ where }),
     prisma.category.findMany({ orderBy: { name: 'asc' } }),
     prisma.brand.findMany({ orderBy: { name: 'asc' } }),
   ]);
+
+  const totalPages = Math.ceil(totalProducts / take);
+
+  // Helper function to build pagination URLs
+  const createPageUrl = (newPage) => {
+    const params = new URLSearchParams(searchParams);
+    params.set('page', newPage.toString());
+    return `?${params.toString()}`;
+  };
 
   return (
     <main className="flex-grow max-w-[1280px] w-full mx-auto px-4 md:px-8 py-12">
@@ -98,7 +113,7 @@ export default async function ProductsPage(props) {
           {/* Control Bar */}
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 border-b border-border pb-4 animate-in fade-in duration-700">
             <span className="text-muted-foreground text-sm mb-4 sm:mb-0">
-              Showing {products.length} {products.length === 1 ? 'Result' : 'Results'}
+              Showing {skip + 1}–{Math.min(skip + take, totalProducts)} of {totalProducts} Results
             </span>
             
             <ProductSort initialSort={sort} />
@@ -106,17 +121,42 @@ export default async function ProductsPage(props) {
 
           {/* Product Grid */}
           {products.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {products.map((product, index) => (
-                <div 
-                  key={product.id}
-                  className="animate-in fade-in slide-in-from-bottom-8 fill-mode-both"
-                  style={{ animationDelay: `${index * 100}ms`, animationDuration: '700ms' }}
+            <>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {products.map((product, index) => (
+                  <div 
+                    key={product.id}
+                    className="animate-in fade-in slide-in-from-bottom-8 fill-mode-both"
+                    style={{ animationDelay: `${index * 100}ms`, animationDuration: '700ms' }}
+                  >
+                    <ProductCard product={product} />
+                  </div>
+                ))}
+              </div>
+
+              {/* Pagination Controls */}
+              <div className="mt-12 pt-8 border-t border-border flex justify-center items-center gap-6">
+                <Link 
+                  href={createPageUrl(Math.max(1, page - 1))}
+                  className={`flex items-center gap-2 px-5 py-2.5 border rounded-sm font-semibold text-sm transition-colors ${page === 1 ? 'opacity-50 pointer-events-none text-muted-foreground bg-gray-50' : 'hover:bg-primary hover:text-white hover:border-primary text-foreground'}`}
                 >
-                  <ProductCard product={product} />
-                </div>
-              ))}
-            </div>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+                  Previous
+                </Link>
+                
+                <span className="text-sm font-medium text-muted-foreground">
+                  Page <span className="text-foreground">{page}</span> of <span className="text-foreground">{totalPages}</span>
+                </span>
+
+                <Link 
+                  href={createPageUrl(Math.min(totalPages, page + 1))}
+                  className={`flex items-center gap-2 px-5 py-2.5 border rounded-sm font-semibold text-sm transition-colors ${page === totalPages ? 'opacity-50 pointer-events-none text-muted-foreground bg-gray-50' : 'hover:bg-primary hover:text-white hover:border-primary text-foreground'}`}
+                >
+                  Next
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+                </Link>
+              </div>
+            </>
           ) : (
             <div className="py-20 text-center animate-in fade-in">
               <h3 className="text-xl font-semibold mb-2">No products found</h3>

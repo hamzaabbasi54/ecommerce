@@ -16,7 +16,7 @@ export async function GET(request) {
 
     // Run aggregate queries in parallel
     const [totalUsers, totalProducts, totalOrders, revenueData, recentSales, ordersLast30] = await Promise.all([
-      prisma.user.count({ where: { role: 'USER' } }), // Only count regular users
+      prisma.user.count(), // Count all registered users (including admins)
       prisma.product.count({ where: { isActive: true, deletedAt: null } }),
       prisma.order.count(),
       prisma.order.aggregate({
@@ -77,7 +77,7 @@ export async function GET(request) {
       revenue: revenueData._sum.total || 0,
       recentSales: recentSales.map(s => ({
         id: s.id,
-        customerName: s.user.name,
+        customerName: s.user ? s.user.name : (s.contactEmail ? `Guest (${s.contactEmail})` : 'Guest Checkout'),
         product: s.items[0]?.product?.name || 'Multiple Items',
         date: s.createdAt,
         amount: s.total

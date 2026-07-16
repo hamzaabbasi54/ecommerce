@@ -89,8 +89,8 @@ export default function OrderList({ initialOrders }) {
                     #{order.id.slice(-8).toUpperCase()}
                   </td>
                   <td className="px-6 py-4">
-                    <div className="font-medium text-foreground">{order.user.name}</div>
-                    <div className="text-xs text-muted-foreground">{order.user.email}</div>
+                    <div className="font-medium text-foreground">{order.user?.name || 'Guest Checkout'}</div>
+                    <div className="text-xs text-muted-foreground">{order.user?.email || order.contactEmail || '—'}</div>
                   </td>
                   <td className="px-6 py-4 text-muted-foreground">
                     {new Date(order.createdAt).toLocaleDateString()}

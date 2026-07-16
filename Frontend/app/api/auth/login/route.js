@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcrypt';
 import prisma from '@/lib/prisma';
-import { generateToken, getCookieOptions } from '@/lib/auth';
+import { generateToken, getCookieOptions, GUEST_COOKIE_NAME } from '@/lib/auth';
+import { mergeGuestIntoUser, linkGuestOrdersByEmail } from '@/lib/guestMerge';
 
 export async function POST(request) {
   try {
@@ -30,10 +31,28 @@ export async function POST(request) {
       );
     }
 
+    // ─── Guest → User merge ─────────────────────────────────────────
+    let mergeResult = null;
+    const guestToken = request.cookies.get(GUEST_COOKIE_NAME)?.value;
+
+    if (guestToken) {
+      const guest = await prisma.guest.findUnique({
+        where: { token: guestToken },
+      });
+
+      if (guest && guest.expiresAt > new Date()) {
+        mergeResult = await mergeGuestIntoUser(user.id, guest.id);
+      }
+    }
+
+    // ─── Phase 4: Retroactive Order Claiming ────────────────────────
+    let linkedOrdersCount = await linkGuestOrdersByEmail(user.id, user.email);
+
+    // ─── Build response ─────────────────────────────────────────────
     const token = generateToken(user.id, user.role);
     const cookieOptions = getCookieOptions();
 
-    const response = NextResponse.json({
+    const responseBody = {
       success: true,
       message: 'Login successful',
       data: {
@@ -42,9 +61,30 @@ export async function POST(request) {
         email: user.email,
         role: user.role,
       },
-    });
+    };
 
+    if (mergeResult || linkedOrdersCount > 0) {
+      responseBody.merge = {
+        cartItemsSkipped: mergeResult?.skippedCartItems || [],
+        wishlistItemsSkipped: mergeResult?.skippedWishlistItems || [],
+        ordersClaimed: linkedOrdersCount,
+      };
+    }
+
+    const response = NextResponse.json(responseBody);
+
+    // Set the user auth token
     response.cookies.set('token', token, cookieOptions);
+
+    // Clear the guest cookie (same expiry pattern as logout)
+    if (guestToken) {
+      response.cookies.set(GUEST_COOKIE_NAME, '', {
+        httpOnly: true,
+        expires: new Date(0),
+        path: '/',
+      });
+    }
+
     return response;
   } catch (error) {
     console.error('Error in login route:', error.message);

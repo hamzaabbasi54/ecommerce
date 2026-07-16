@@ -37,7 +37,7 @@ function OrderSuccessContent() {
           Continue Shopping
         </Link>
         <Link 
-          href={`/orders/${orderId}`}
+          href={`/track-order?orderId=${orderId}`}
           className="bg-transparent border border-outline text-on-surface px-xl py-md rounded-lg font-button text-button hover:bg-surface-container-low transition-colors"
         >
           View Order Details

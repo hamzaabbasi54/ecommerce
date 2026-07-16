@@ -36,7 +36,7 @@ export default function ProductList({ initialProducts }) {
   return (
     <div className="bg-surface-container-lowest rounded-xl border border-border shadow-sm overflow-hidden">
       <div className="p-4 md:p-6 border-b border-border flex flex-col md:flex-row justify-between gap-4 items-center bg-surface-container/30">
-        <div className="relative flex-1 w-full min-w-[250px] md:max-w-lg">
+        <div className="relative flex-1 w-full min-w-[250px] md:max-w-xl">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
           <Input 
             placeholder="Search by product name, category, or price..." 
@@ -45,7 +45,7 @@ export default function ProductList({ initialProducts }) {
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-        <Button onClick={() => router.push('/admin/products/new')} className="w-full md:w-auto py-5 px-6 rounded-full shadow-sm">
+        <Button onClick={() => router.push('/admin/products/new')} className="w-full md:w-auto py-5 px-6 rounded-full shadow-sm cursor-pointer">
           <Plus className="w-5 h-5 mr-2" /> Add Product
         </Button>
       </div>
@@ -99,11 +99,11 @@ export default function ProductList({ initialProducts }) {
                   </td>
                   <td className="px-6 py-4 text-right">
                     <div className="flex items-center justify-end gap-2">
-                      <Button variant="ghost" size="icon" onClick={() => router.push(`/admin/products/${product.id}`)}>
-                        <Edit className="w-4 h-4 text-muted-foreground hover:text-primary transition-colors" />
+                      <Button variant="ghost" size="icon" className="cursor-pointer hover:bg-blue-500/10 hover:text-blue-600 text-muted-foreground transition-colors" onClick={() => router.push(`/admin/products/${product.id}`)}>
+                        <Edit className="w-4 h-4" />
                       </Button>
-                      <Button variant="ghost" size="icon" onClick={() => handleDelete(product.id)}>
-                        <Trash2 className="w-4 h-4 text-muted-foreground hover:text-destructive transition-colors" />
+                      <Button variant="ghost" size="icon" className="cursor-pointer hover:bg-red-500/10 hover:text-red-600 text-muted-foreground transition-colors" onClick={() => handleDelete(product.id)}>
+                        <Trash2 className="w-4 h-4" />
                       </Button>
                     </div>
                   </td>

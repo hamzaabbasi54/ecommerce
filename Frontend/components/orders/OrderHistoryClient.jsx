@@ -66,42 +66,42 @@ export default function OrderHistoryClient() {
   }
 
   return (
-    <main className="flex-grow w-full max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-xl">
-      <div className="mb-lg">
-        <h1 className="font-h2 text-h2 text-on-background">My Orders</h1>
-        <p className="font-body-md text-body-md text-muted-foreground mt-sm">View your complete order history.</p>
+    <main className="flex-grow w-full max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-4">
+      <div className="mb-4 border-b border-surface-variant pb-2">
+        <h1 className="text-xl font-bold text-on-background">My Orders</h1>
+        <p className="text-xs text-muted-foreground mt-1">View your complete order history.</p>
       </div>
 
-      <div className="flex flex-col gap-lg">
+      <div className="flex flex-col gap-4">
         {orders.map((order) => {
           // Display up to 3 thumbnails
           const previewItems = order.items.slice(0, 3);
           const hasMore = order.items.length > 3;
 
           return (
-            <div key={order.id} className="bg-surface-container-lowest border border-surface-variant p-lg rounded-lg shadow-sm">
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-md mb-md pb-sm border-b border-surface-variant">
+            <div key={order.id} className="bg-surface-container-lowest border border-surface-variant p-4 rounded-lg shadow-sm">
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-3 pb-2 border-b border-surface-variant">
                 <div>
-                  <h3 className="font-h4 text-h4 text-on-background">Order #{order.id.substring(0, 8).toUpperCase()}</h3>
-                  <p className="font-body-md text-body-md text-muted-foreground mt-xs">
+                  <h3 className="text-base font-semibold text-on-background">Order #{order.id.substring(0, 8).toUpperCase()}</h3>
+                  <p className="text-[10px] text-muted-foreground mt-0.5">
                     Placed on {new Intl.DateTimeFormat('en-US', { month: 'long', day: 'numeric', year: 'numeric' }).format(new Date(order.createdAt))}
                   </p>
                 </div>
-                <div className="flex flex-col md:items-end gap-sm">
-                  <span className="font-h4 text-h4 text-on-background">${order.total.toFixed(2)}</span>
-                  <div className="inline-flex items-center gap-xs px-sm py-1 bg-surface-container border border-surface-variant rounded-full w-fit">
-                    <span className={`w-2 h-2 rounded-full ${order.status === 'pending' ? 'bg-amber-500' : 'bg-green-500'}`}></span>
-                    <span className="font-label-sm text-label-sm capitalize text-on-surface-variant">
+                <div className="flex flex-col md:items-end gap-2">
+                  <span className="text-base font-semibold text-on-background">${order.total.toFixed(2)}</span>
+                  <div className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-surface-container border border-surface-variant rounded-full w-fit">
+                    <span className={`w-1.5 h-1.5 rounded-full ${order.status === 'pending' ? 'bg-amber-500' : 'bg-green-500'}`}></span>
+                    <span className="text-[10px] font-medium capitalize text-on-surface-variant">
                       {order.status}
                     </span>
                   </div>
                 </div>
               </div>
 
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-md mt-md">
-                <div className="flex items-center gap-sm">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mt-3">
+                <div className="flex items-center gap-2">
                   {previewItems.map((item, idx) => (
-                    <div key={idx} className="w-16 h-16 bg-surface border border-surface-variant rounded flex items-center justify-center overflow-hidden shrink-0">
+                    <div key={idx} className="w-12 h-12 bg-surface border border-surface-variant rounded flex items-center justify-center overflow-hidden shrink-0">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img 
                         src={item.product?.images?.[0] || '/placeholder.png'} 
@@ -111,15 +111,15 @@ export default function OrderHistoryClient() {
                     </div>
                   ))}
                   {hasMore && (
-                    <div className="w-16 h-16 bg-surface-container border border-surface-variant rounded flex items-center justify-center shrink-0">
-                      <span className="font-body-md text-body-md font-medium text-muted-foreground">+{order.items.length - 3}</span>
+                    <div className="w-12 h-12 bg-surface-container border border-surface-variant rounded flex items-center justify-center shrink-0">
+                      <span className="text-[10px] font-medium text-muted-foreground">+{order.items.length - 3}</span>
                     </div>
                   )}
                 </div>
 
                 <Link 
                   href={`/orders/${order.id}`}
-                  className="bg-transparent border border-outline text-on-surface px-md py-sm rounded-lg font-button text-button hover:bg-surface-container-low transition-colors w-full sm:w-auto text-center shrink-0"
+                  className="bg-transparent border border-outline text-on-surface px-4 py-1.5 rounded-lg text-xs font-medium hover:bg-surface-container-low transition-colors w-full sm:w-auto text-center shrink-0"
                 >
                   View Details
                 </Link>

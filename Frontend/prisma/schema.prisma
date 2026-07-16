@@ -41,10 +41,25 @@ model User {
   wishlist  Wishlist[]
 }
 
+model Guest {
+  id         String   @id @default(cuid())
+  token      String   @unique
+  createdAt  DateTime @default(now())
+  lastSeenAt DateTime @default(now())
+  expiresAt  DateTime
+
+  cart      Cart?
+  wishlist  Wishlist[]
+  orders    Order[]
+  addresses Address[]
+}
+
 model Address {
-  id         String  @id @default(cuid())
-  userId     String
-  user       User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id      String  @id @default(cuid())
+  userId  String?
+  user    User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  guestId String?
+  guest   Guest?  @relation(fields: [guestId], references: [id], onDelete: Cascade)
   label      String
   street     String
   city       String
@@ -59,6 +74,7 @@ model Address {
   updatedAt DateTime @updatedAt
 
   @@index([userId])
+  @@index([guestId])
 }
 
 model Category {
@@ -136,9 +152,11 @@ model Review {
 }
 
 model Cart {
-  id     String @id @default(cuid())
-  userId String @unique
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id      String  @id @default(cuid())
+  userId  String? @unique
+  user    User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  guestId String? @unique
+  guest   Guest?  @relation(fields: [guestId], references: [id], onDelete: Cascade)
 
   items CartItem[]
 
@@ -164,8 +182,10 @@ model CartItem {
 
 model Wishlist {
   id        String  @id @default(cuid())
-  userId    String
-  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String?
+  user      User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  guestId   String?
+  guest     Guest?  @relation(fields: [guestId], references: [id], onDelete: Cascade)
   productId String
   product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 
@@ -173,7 +193,9 @@ model Wishlist {
   updatedAt DateTime @updatedAt
 
   @@unique([userId, productId])
+  @@unique([guestId, productId])
   @@index([userId])
+  @@index([guestId])
 }
 
 model Coupon {
@@ -194,16 +216,21 @@ model Coupon {
 
 model Order {
   id        String  @id @default(cuid())
-  userId    String
-  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String?
+  user      User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  guestId   String?
+  guest     Guest?  @relation(fields: [guestId], references: [id], onDelete: Cascade)
   addressId String
   address   Address @relation(fields: [addressId], references: [id])
 
-  status         String @default("pending")
+  status         String    @default("pending")
+  deliveredAt    DateTime?
+  contactEmail   String?
+  contactPhone   String?
   subtotal       Float
   shippingCharge Float
   tax            Float
-  discount       Float  @default(0)
+  discount       Float     @default(0)
   total          Float
 
   couponId String?
@@ -212,12 +239,14 @@ model Order {
   paymentMethod String
   paymentStatus String @default("pending")
 
-  items Orderitem[]
+  items          Orderitem[]
+  returnRequests ReturnRequest[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([userId])
+  @@index([guestId])
   @@index([addressId])
   @@index([couponId])
 }
@@ -236,4 +265,19 @@ model Orderitem {
 
   @@index([orderId])
   @@index([productId])
+}
+
+model ReturnRequest {
+  id      String @id @default(cuid())
+  orderId String
+  order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  type   String // "refund" or "exchange"
+  reason String
+  status String @default("pending") // pending, approved, rejected
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([orderId])
 }

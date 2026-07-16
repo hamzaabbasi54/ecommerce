@@ -6,7 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, ArrowLeft } from 'lucide-react';
 
 import { register as registerService } from '@/services/authService';
 import { Input } from '@/components/ui/input';
@@ -58,9 +58,21 @@ export default function RegisterForm() {
 
   return (
     <div className="w-full max-w-[480px]">
+      {/* Back Button */}
+      <div className="mb-6 flex justify-center">
+        <Button variant="ghost" asChild className="text-muted-foreground hover:text-foreground">
+          <Link href="/">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Homepage
+          </Link>
+        </Button>
+      </div>
+
       {/* Brand / Header */}
       <div className="text-center mb-12">
-        <h1 className="text-3xl font-bold tracking-tighter text-primary mb-2">Electronica</h1>
+        <Link href="/" className="inline-block hover:opacity-80 transition-opacity">
+          <h1 className="text-3xl font-bold tracking-tighter text-primary mb-2">Electronica</h1>
+        </Link>
         <p className="text-muted-foreground">Create your account.</p>
       </div>
 

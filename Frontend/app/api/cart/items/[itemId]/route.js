@@ -1,11 +1,25 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { verifyAuth } from '@/lib/auth';
+import { verifyOptionalAuth, refreshGuestCookie } from '@/lib/auth';
 
 // PUT /api/cart/items/:itemId
 export async function PUT(request, { params }) {
   try {
-    const user = await verifyAuth(request);
+    const { user, guest } = await verifyOptionalAuth(request);
+    let guestCookieHeader = null;
+
+    if (!user && !guest) {
+      return NextResponse.json(
+        { success: false, message: 'Cart not found' },
+        { status: 404 }
+      );
+    }
+
+    // Rolling refresh for existing guest
+    if (guest) {
+      guestCookieHeader = await refreshGuestCookie(guest);
+    }
+
     const { itemId } = await params;
     const { quantity } = await request.json();
     const requestedQuantity = parseInt(quantity);
@@ -17,7 +31,8 @@ export async function PUT(request, { params }) {
       );
     }
 
-    const cart = await prisma.cart.findUnique({ where: { userId: user.id } });
+    const where = user ? { userId: user.id } : { guestId: guest.id };
+    const cart = await prisma.cart.findUnique({ where });
     if (!cart) {
       return NextResponse.json(
         { success: false, message: 'Cart not found' },
@@ -49,11 +64,15 @@ export async function PUT(request, { params }) {
       data: { quantity: requestedQuantity },
     });
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       success: true,
       message: 'Cart item updated',
       data: updatedItem,
     });
+    if (guestCookieHeader) {
+      response.headers.set('Set-Cookie', guestCookieHeader);
+    }
+    return response;
   } catch (error) {
     if (error instanceof Response) return error;
     console.error('Error in updateCartItemQuantity:', error.message);
@@ -67,10 +86,25 @@ export async function PUT(request, { params }) {
 // DELETE /api/cart/items/:itemId
 export async function DELETE(request, { params }) {
   try {
-    const user = await verifyAuth(request);
+    const { user, guest } = await verifyOptionalAuth(request);
+    let guestCookieHeader = null;
+
+    if (!user && !guest) {
+      return NextResponse.json(
+        { success: false, message: 'Cart not found' },
+        { status: 404 }
+      );
+    }
+
+    // Rolling refresh for existing guest
+    if (guest) {
+      guestCookieHeader = await refreshGuestCookie(guest);
+    }
+
     const { itemId } = await params;
 
-    const cart = await prisma.cart.findUnique({ where: { userId: user.id } });
+    const where = user ? { userId: user.id } : { guestId: guest.id };
+    const cart = await prisma.cart.findUnique({ where });
     if (!cart) {
       return NextResponse.json(
         { success: false, message: 'Cart not found' },
@@ -91,7 +125,11 @@ export async function DELETE(request, { params }) {
 
     await prisma.cartItem.delete({ where: { id: itemId } });
 
-    return NextResponse.json({ success: true, message: 'Item removed from cart' });
+    const response = NextResponse.json({ success: true, message: 'Item removed from cart' });
+    if (guestCookieHeader) {
+      response.headers.set('Set-Cookie', guestCookieHeader);
+    }
+    return response;
   } catch (error) {
     if (error instanceof Response) return error;
     console.error('Error in removeFromCart:', error.message);
