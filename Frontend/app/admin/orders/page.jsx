@@ -1,6 +1,8 @@
 import prisma from '@/lib/prisma';
 import OrderList from '@/components/admin/orders/OrderList';
 
+export const dynamic = 'force-dynamic';
+
 export const metadata = {
   title: 'Manage Orders | Admin',
 };
