@@ -2,6 +2,8 @@ import AdminProtect from '@/components/admin/AdminProtect';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import AdminHeader from '@/components/admin/AdminHeader';
 
+export const dynamic = 'force-dynamic';
+
 export const metadata = {
   title: 'Admin Dashboard | Electronica',
   description: 'Manage the Electronica platform.',
