@@ -5,10 +5,28 @@ export const metadata = {
   title: 'Manage Coupons | Admin',
 };
 
-export default async function AdminCouponsPage() {
-  const coupons = await prisma.coupon.findMany({
-    orderBy: { createdAt: 'desc' }
-  });
+export default async function AdminCouponsPage({ searchParams }) {
+  const resolvedParams = await searchParams;
+  const page = parseInt(resolvedParams.page) || 1;
+  const limit = parseInt(resolvedParams.limit) || 10;
+  const q = resolvedParams.q || '';
+  const skip = (page - 1) * limit;
+
+  const where = q ? {
+    code: { contains: q, mode: 'insensitive' }
+  } : {};
+
+  const [coupons, total] = await Promise.all([
+    prisma.coupon.findMany({
+      where,
+      orderBy: { createdAt: 'desc' },
+      skip,
+      take: limit,
+    }),
+    prisma.coupon.count({ where })
+  ]);
+
+  const totalPages = Math.ceil(total / limit);
 
   return (
     <div className="animate-in fade-in duration-500">
@@ -17,7 +35,7 @@ export default async function AdminCouponsPage() {
         <p className="text-muted-foreground mt-2">Manage discount codes and promotional offers.</p>
       </div>
 
-      <CouponList initialCoupons={coupons} />
+      <CouponList initialCoupons={coupons} currentPage={page} totalPages={totalPages} initialQuery={q} />
     </div>
   );
 }

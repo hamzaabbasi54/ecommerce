@@ -43,11 +43,23 @@ export async function PUT(request, { params }) {
       if (existingSlug && existingSlug.id !== id) slug = `${slug}-${Date.now()}`;
     }
 
-    let images = product.images;
-    const imageFiles = formData.getAll('images').filter((f) => f instanceof File);
-    if (imageFiles.length > 0) {
-      const newImages = await saveUploadedFiles(imageFiles, 'products');
-      images = [...product.images, ...newImages];
+    let images = [...product.images];
+    
+    const existingImages = formData.getAll('existingImages');
+    if (existingImages.length > 0) {
+      images = existingImages;
+    }
+
+    const thumbnailFile = formData.get('thumbnail');
+    const galleryFiles = formData.getAll('gallery').filter((f) => f instanceof File);
+
+    if (thumbnailFile instanceof File || galleryFiles.length > 0) {
+      const allNewFiles = [];
+      if (thumbnailFile instanceof File) allNewFiles.push(thumbnailFile);
+      allNewFiles.push(...galleryFiles);
+
+      const newUrls = await saveUploadedFiles(allNewFiles, 'products');
+      images = newUrls; // Replace entirely since UI uploads new to replace
     }
 
     const updatedProduct = await prisma.product.update({

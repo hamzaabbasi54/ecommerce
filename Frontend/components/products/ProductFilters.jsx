@@ -4,6 +4,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion";
 
 export default function ProductFilters({ categories, brands }) {
   const router = useRouter();
@@ -82,87 +83,97 @@ export default function ProductFilters({ categories, brands }) {
         )}
       </div>
 
-      {/* Categories Filter */}
-      <div className="space-y-4">
-        <h3 className="font-medium text-foreground">Categories</h3>
-        <ul className="space-y-2">
-          <li>
-            <button
-              onClick={() => applyFilter('category', null)}
-              className={`text-sm hover:text-primary transition-colors ${!currentCategory ? 'text-primary font-medium' : 'text-muted-foreground'}`}
-            >
-              All Categories
-            </button>
-          </li>
-          {categories.map((category) => (
-            <li key={category.id}>
-              <button
-                onClick={() => applyFilter('category', category.slug)}
-                className={`text-sm hover:text-primary transition-colors ${currentCategory === category.slug ? 'text-primary font-medium' : 'text-muted-foreground'}`}
-              >
-                {category.name}
-              </button>
-            </li>
-          ))}
-        </ul>
-      </div>
+      <Accordion type="multiple" defaultValue={["categories", "brands", "price"]} className="w-full">
+        {/* Categories Filter */}
+        <AccordionItem value="categories" className="border-b-0">
+          <AccordionTrigger className="hover:no-underline py-4 font-medium text-foreground">Categories</AccordionTrigger>
+          <AccordionContent>
+            <ul className="space-y-2">
+              <li>
+                <button
+                  onClick={() => applyFilter('category', null)}
+                  className={`text-sm hover:text-primary transition-colors ${!currentCategory ? 'text-primary font-medium' : 'text-muted-foreground'}`}
+                >
+                  All Categories
+                </button>
+              </li>
+              {categories.map((category) => (
+                <li key={category.id}>
+                  <button
+                    onClick={() => applyFilter('category', category.slug)}
+                    className={`text-sm hover:text-primary transition-colors ${currentCategory === category.slug ? 'text-primary font-medium' : 'text-muted-foreground'}`}
+                  >
+                    {category.name}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </AccordionContent>
+        </AccordionItem>
 
-      {/* Brands Filter */}
-      <div className="space-y-4">
-        <h3 className="font-medium text-foreground">Brands</h3>
-        <ul className="space-y-2">
-          <li>
-            <button
-              onClick={() => applyFilter('brand', null)}
-              className={`text-sm hover:text-primary transition-colors ${!currentBrand ? 'text-primary font-medium' : 'text-muted-foreground'}`}
-            >
-              All Brands
-            </button>
-          </li>
-          {brands.map((brand) => (
-            <li key={brand.id}>
-              <button
-                onClick={() => applyFilter('brand', brand.slug)}
-                className={`text-sm hover:text-primary transition-colors ${currentBrand === brand.slug ? 'text-primary font-medium' : 'text-muted-foreground'}`}
-              >
-                {brand.name}
-              </button>
-            </li>
-          ))}
-        </ul>
-      </div>
+        {/* Brands Filter */}
+        <AccordionItem value="brands" className="border-b-0 mt-2">
+          <AccordionTrigger className="hover:no-underline py-4 font-medium text-foreground">Brands</AccordionTrigger>
+          <AccordionContent>
+            <ul className="space-y-2">
+              <li>
+                <button
+                  onClick={() => applyFilter('brand', null)}
+                  className={`text-sm hover:text-primary transition-colors ${!currentBrand ? 'text-primary font-medium' : 'text-muted-foreground'}`}
+                >
+                  All Brands
+                </button>
+              </li>
+              {brands.map((brand) => (
+                <li key={brand.id}>
+                  <button
+                    onClick={() => applyFilter('brand', brand.slug)}
+                    className={`text-sm hover:text-primary transition-colors ${currentBrand === brand.slug ? 'text-primary font-medium' : 'text-muted-foreground'}`}
+                  >
+                    {brand.name}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </AccordionContent>
+        </AccordionItem>
 
-      {/* Price Range Filter */}
-      <div className="space-y-4">
-        <h3 className="font-medium text-foreground">Price Range</h3>
-        <form onSubmit={applyPriceFilter} className="flex items-end gap-2">
-          <div className="space-y-1 flex-1">
-            <label htmlFor="min" className="text-xs text-muted-foreground">Min ($)</label>
-            <Input 
-              id="min"
-              type="number" 
-              placeholder="0" 
-              value={minPrice}
-              onChange={(e) => setMinPrice(e.target.value)}
-              className="h-9"
-            />
-          </div>
-          <div className="space-y-1 flex-1">
-            <label htmlFor="max" className="text-xs text-muted-foreground">Max ($)</label>
-            <Input 
-              id="max"
-              type="number" 
-              placeholder="Max" 
-              value={maxPrice}
-              onChange={(e) => setMaxPrice(e.target.value)}
-              className="h-9"
-            />
-          </div>
-          <Button type="submit" size="sm" className="h-9 px-3">
-            Go
-          </Button>
-        </form>
-      </div>
+        {/* Price Range Filter */}
+        <AccordionItem value="price" className="border-b-0 mt-2">
+          <AccordionTrigger className="hover:no-underline py-4 font-medium text-foreground">Price Range</AccordionTrigger>
+          <AccordionContent>
+            <form onSubmit={applyPriceFilter} className="flex items-end gap-2">
+              <div className="space-y-1 flex-1">
+                <label htmlFor="min" className="text-xs text-muted-foreground">Min ($)</label>
+                <Input 
+                  id="min"
+                  type="number" 
+                  placeholder="0"
+                  value={minPrice}
+                  onChange={(e) => setMinPrice(e.target.value)}
+                  className="h-8 text-sm"
+                  min="0"
+                />
+              </div>
+              <div className="space-y-1 flex-1">
+                <label htmlFor="max" className="text-xs text-muted-foreground">Max ($)</label>
+                <Input 
+                  id="max"
+                  type="number" 
+                  placeholder="Any"
+                  value={maxPrice}
+                  onChange={(e) => setMaxPrice(e.target.value)}
+                  className="h-8 text-sm"
+                  min="0"
+                />
+              </div>
+              <Button type="submit" size="sm" className="h-8 px-3">
+                Apply
+              </Button>
+            </form>
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
     </div>
   );
 }

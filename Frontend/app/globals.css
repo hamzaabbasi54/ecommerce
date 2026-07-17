@@ -196,4 +196,10 @@
   html {
     @apply font-sans;
   }
+  button, [role="button"] {
+    cursor: pointer;
+  }
+  button:disabled {
+    cursor: default;
+  }
 }

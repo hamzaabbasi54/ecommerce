@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { getAddresses, createAddress, updateAddress, deleteAddress } from '@/services/userService';
 import { Loader2 } from 'lucide-react';
+import { Checkbox } from "@/components/ui/checkbox";
 
 export default function AddressManager() {
   const [addresses, setAddresses] = useState([]);
@@ -169,16 +170,13 @@ export default function AddressManager() {
             </div>
           </div>
 
-          <div className="flex items-center gap-2 pt-2">
-            <input 
-              type="checkbox" 
+          <div className="flex items-center space-x-2 pt-2">
+            <Checkbox 
               id="isDefault" 
-              name="isDefault" 
               checked={formData.isDefault} 
-              onChange={handleChange} 
-              className="w-4 h-4 text-primary rounded border-input focus:ring-primary"
+              onCheckedChange={(checked) => setFormData(prev => ({...prev, isDefault: checked}))} 
             />
-            <label htmlFor="isDefault" className="text-sm font-medium text-foreground">Set as default shipping address</label>
+            <label htmlFor="isDefault" className="text-sm font-medium text-foreground cursor-pointer">Set as default shipping address</label>
           </div>
 
           <div className="flex justify-end gap-3 pt-4">

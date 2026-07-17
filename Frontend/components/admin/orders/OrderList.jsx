@@ -1,18 +1,60 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
 import { Search, Eye } from 'lucide-react';
+import { useDebounce } from '@/hooks/useDebounce';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import ActionButtons from '@/components/admin/ActionButtons';
+import Pagination from '@/components/ui/Pagination';
 
-export default function OrderList({ initialOrders }) {
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+export default function OrderList({ initialOrders, currentPage, totalPages, initialQuery = '' }) {
   const [orders, setOrders] = useState(initialOrders);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState(initialQuery);
+  const debouncedSearchTerm = useDebounce(searchTerm, 500);
+  const initialRender = useRef(true);
   const [loadingId, setLoadingId] = useState(null);
   const [viewOrder, setViewOrder] = useState(null);
   const router = useRouter();
+
+  // Sync state if props change
+  useEffect(() => {
+    setOrders(initialOrders);
+  }, [initialOrders]);
+
+  useEffect(() => {
+    if (initialRender.current) {
+      initialRender.current = false;
+      return;
+    }
+    router.push(`/admin/orders?page=1&q=${encodeURIComponent(debouncedSearchTerm)}`);
+  }, [debouncedSearchTerm, router]);
+
+  const handleSearchChange = (e) => {
+    setSearchTerm(e.target.value);
+  };
+
+  const handlePageChange = (page) => {
+    router.push(`/admin/orders?page=${page}&q=${encodeURIComponent(searchTerm)}`);
+  };
 
   const handleStatusChange = async (orderId, newStatus) => {
     if (confirm(`Change order status to ${newStatus}?`)) {
@@ -31,11 +73,8 @@ export default function OrderList({ initialOrders }) {
     }
   };
 
-  const filteredOrders = orders.filter(o => 
-    o.id.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    o.user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    o.user.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Filter logic moved to server
+  const displayOrders = orders;
 
   const getStatusColor = (status) => {
     switch(status) {
@@ -52,78 +91,88 @@ export default function OrderList({ initialOrders }) {
   return (
     <div className="bg-surface-container-lowest rounded-xl border border-border shadow-sm overflow-hidden relative">
       <div className="p-4 md:p-6 border-b border-border flex flex-col md:flex-row justify-between gap-4 items-center">
-        <div className="relative w-full md:max-w-md">
+        <div className="relative flex-1 w-full">
           <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input 
             placeholder="Search orders by ID, name, or email..." 
             className="pl-9 w-full bg-surface-container"
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={handleSearchChange}
           />
         </div>
       </div>
 
-      <div className="overflow-x-auto min-h-[300px]">
-        <table className="w-full text-sm text-left">
-          <thead className="text-xs text-muted-foreground uppercase bg-surface-container/50 border-b border-border">
-            <tr>
-              <th className="px-6 py-4 font-medium">Order ID</th>
-              <th className="px-6 py-4 font-medium">Customer</th>
-              <th className="px-6 py-4 font-medium">Date</th>
-              <th className="px-6 py-4 font-medium">Total</th>
-              <th className="px-6 py-4 font-medium">Status</th>
-              <th className="px-6 py-4 font-medium text-right">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredOrders.length === 0 ? (
-              <tr>
-                <td colSpan="6" className="px-6 py-8 text-center text-muted-foreground">
+      <div className="min-h-[300px]">
+        <Table>
+          <TableHeader className="bg-surface-container/50">
+            <TableRow>
+              <TableHead className="font-medium">Order ID</TableHead>
+              <TableHead className="font-medium">Customer</TableHead>
+              <TableHead className="font-medium">Date</TableHead>
+              <TableHead className="font-medium">Total</TableHead>
+              <TableHead className="font-medium">Status</TableHead>
+              <TableHead className="text-right font-medium">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {displayOrders.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">
                   No orders found.
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
             ) : (
-              filteredOrders.map((order) => (
-                <tr key={order.id} className="border-b border-border hover:bg-surface-container-low transition-colors">
-                  <td className="px-6 py-4 font-mono text-xs text-muted-foreground">
+              displayOrders.map((order) => (
+                <TableRow key={order.id} className="hover:bg-surface-container-low transition-colors">
+                  <TableCell className="font-mono text-xs text-muted-foreground">
                     #{order.id.slice(-8).toUpperCase()}
-                  </td>
-                  <td className="px-6 py-4">
+                  </TableCell>
+                  <TableCell>
                     <div className="font-medium text-foreground">{order.user?.name || 'Guest Checkout'}</div>
                     <div className="text-xs text-muted-foreground">{order.user?.email || order.contactEmail || '—'}</div>
-                  </td>
-                  <td className="px-6 py-4 text-muted-foreground">
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">
                     {new Date(order.createdAt).toLocaleDateString()}
-                  </td>
-                  <td className="px-6 py-4 font-medium text-foreground">
+                  </TableCell>
+                  <TableCell className="font-medium text-foreground">
                     ${order.total.toFixed(2)}
-                  </td>
-                  <td className="px-6 py-4">
-                    <select
+                  </TableCell>
+                  <TableCell>
+                    <Select
                       value={order.status}
-                      onChange={(e) => handleStatusChange(order.id, e.target.value)}
+                      onValueChange={(value) => handleStatusChange(order.id, value)}
                       disabled={loadingId === order.id}
-                      className={`text-xs rounded-full border px-2 py-1 font-medium capitalize ${getStatusColor(order.status)}`}
                     >
-                      <option value="pending">Pending</option>
-                      <option value="processing">Processing</option>
-                      <option value="shipped">Shipped</option>
-                      <option value="delivered">Delivered</option>
-                      <option value="cancelled">Cancelled</option>
-                      <option value="returned">Returned</option>
-                    </select>
-                  </td>
-                  <td className="px-6 py-4 text-right">
-                    <Button variant="ghost" size="icon" onClick={() => setViewOrder(order)}>
-                      <Eye className="w-4 h-4 text-muted-foreground hover:text-primary transition-colors" />
-                    </Button>
-                  </td>
-                </tr>
+                      <SelectTrigger className={`h-8 w-[130px] text-xs rounded-full border px-3 py-1 font-medium capitalize ${getStatusColor(order.status)}`}>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="pending">Pending</SelectItem>
+                        <SelectItem value="processing">Processing</SelectItem>
+                        <SelectItem value="shipped">Shipped</SelectItem>
+                        <SelectItem value="delivered">Delivered</SelectItem>
+                        <SelectItem value="cancelled">Cancelled</SelectItem>
+                        <SelectItem value="returned">Returned</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <ActionButtons 
+                      onView={() => setViewOrder(order)}
+                    />
+                  </TableCell>
+                </TableRow>
               ))
             )}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       </div>
+
+      <Pagination 
+        currentPage={currentPage} 
+        totalPages={totalPages} 
+        onPageChange={handlePageChange} 
+      />
 
       {/* View Order Modal */}
       {viewOrder && (
@@ -140,8 +189,8 @@ export default function OrderList({ initialOrders }) {
               <div className="grid grid-cols-2 gap-6">
                 <div>
                   <h3 className="text-sm font-medium text-muted-foreground mb-2">Customer Info</h3>
-                  <p className="font-medium">{viewOrder.user.name}</p>
-                  <p className="text-sm text-muted-foreground">{viewOrder.user.email}</p>
+                  <p className="font-medium">{viewOrder.user?.name || 'Guest Checkout'}</p>
+                  <p className="text-sm text-muted-foreground">{viewOrder.user?.email || viewOrder.contactEmail || 'No email provided'}</p>
                 </div>
                 <div>
                   <h3 className="text-sm font-medium text-muted-foreground mb-2">Shipping Address</h3>

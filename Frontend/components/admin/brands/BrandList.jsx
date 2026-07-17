@@ -1,15 +1,29 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
 import { Edit, Trash2, Plus, Search, Image as ImageIcon } from 'lucide-react';
+import { useDebounce } from '@/hooks/useDebounce';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import ActionButtons from '@/components/admin/ActionButtons';
+import Pagination from '@/components/ui/Pagination';
 
-export default function BrandList({ initialBrands }) {
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+
+export default function BrandList({ initialBrands, currentPage, totalPages, initialQuery = '' }) {
   const [brands, setBrands] = useState(initialBrands);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState(initialQuery);
+  const debouncedSearchTerm = useDebounce(searchTerm, 500);
+  const initialRender = useRef(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingBrand, setEditingBrand] = useState(null);
   const router = useRouter();
@@ -20,6 +34,27 @@ export default function BrandList({ initialBrands }) {
   const [previewUrl, setPreviewUrl] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  // Sync state if props change
+  useEffect(() => {
+    setBrands(initialBrands);
+  }, [initialBrands]);
+
+  useEffect(() => {
+    if (initialRender.current) {
+      initialRender.current = false;
+      return;
+    }
+    router.push(`/admin/brands?page=1&q=${encodeURIComponent(debouncedSearchTerm)}`);
+  }, [debouncedSearchTerm, router]);
+
+  const handleSearchChange = (e) => {
+    setSearchTerm(e.target.value);
+  };
+
+  const handlePageChange = (page) => {
+    router.push(`/admin/brands?page=${page}&q=${encodeURIComponent(searchTerm)}`);
+  };
 
   const openModal = (brand = null) => {
     setEditingBrand(brand);
@@ -98,20 +133,19 @@ export default function BrandList({ initialBrands }) {
     }
   };
 
-  const filteredBrands = brands.filter(b => 
-    b.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Filter logic moved to server
+  const displayBrands = brands;
 
   return (
     <div className="bg-surface-container-lowest rounded-xl border border-border shadow-sm overflow-hidden relative">
       <div className="p-4 md:p-6 border-b border-border flex flex-col md:flex-row justify-between gap-4 items-center">
-        <div className="relative w-full md:max-w-md">
+        <div className="relative flex-1 w-full">
           <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input 
             placeholder="Search brands..." 
             className="pl-9 w-full bg-surface-container"
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={handleSearchChange}
           />
         </div>
         <Button onClick={() => openModal()} className="w-full md:w-auto">
@@ -119,54 +153,58 @@ export default function BrandList({ initialBrands }) {
         </Button>
       </div>
 
-      <div className="overflow-x-auto min-h-[300px]">
-        <table className="w-full text-sm text-left">
-          <thead className="text-xs text-muted-foreground uppercase bg-surface-container/50 border-b border-border">
-            <tr>
-              <th className="px-6 py-4 font-medium">Brand</th>
-              <th className="px-6 py-4 font-medium">Slug</th>
-              <th className="px-6 py-4 font-medium">Description</th>
-              <th className="px-6 py-4 font-medium text-right">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredBrands.length === 0 ? (
-              <tr>
-                <td colSpan="4" className="px-6 py-8 text-center text-muted-foreground">
+      <div className="min-h-[300px]">
+        <Table>
+          <TableHeader className="bg-surface-container/50">
+            <TableRow>
+              <TableHead className="font-medium">Brand</TableHead>
+              <TableHead className="font-medium">Slug</TableHead>
+              <TableHead className="font-medium">Description</TableHead>
+              <TableHead className="text-right font-medium">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {displayBrands.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={4} className="h-24 text-center text-muted-foreground">
                   No brands found.
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
             ) : (
-              filteredBrands.map((brand) => (
-                <tr key={brand.id} className="border-b border-border hover:bg-surface-container-low transition-colors">
-                  <td className="px-6 py-4 font-medium text-foreground flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-md bg-white border border-border overflow-hidden flex items-center justify-center shrink-0">
-                      {brand.logo ? (
-                        <img src={brand.logo} alt={brand.name} className="object-contain max-h-full max-w-full" />
-                      ) : (
-                        <ImageIcon className="w-5 h-5 text-muted-foreground" />
-                      )}
+              displayBrands.map((brand) => (
+                <TableRow key={brand.id} className="hover:bg-surface-container-low transition-colors">
+                  <TableCell className="font-medium text-foreground">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-md bg-white border border-border overflow-hidden flex items-center justify-center shrink-0">
+                        {brand.logo ? (
+                          <img src={brand.logo} alt={brand.name} className="object-contain max-h-full max-w-full" />
+                        ) : (
+                          <ImageIcon className="w-5 h-5 text-muted-foreground" />
+                        )}
+                      </div>
+                      {brand.name}
                     </div>
-                    {brand.name}
-                  </td>
-                  <td className="px-6 py-4 text-muted-foreground">{brand.slug}</td>
-                  <td className="px-6 py-4 text-muted-foreground line-clamp-2 max-w-[200px]">{brand.description || '-'}</td>
-                  <td className="px-6 py-4 text-right">
-                    <div className="flex items-center justify-end gap-2">
-                      <Button variant="ghost" size="icon" onClick={() => openModal(brand)}>
-                        <Edit className="w-4 h-4 text-muted-foreground hover:text-primary transition-colors" />
-                      </Button>
-                      <Button variant="ghost" size="icon" onClick={() => handleDelete(brand.id)}>
-                        <Trash2 className="w-4 h-4 text-muted-foreground hover:text-destructive transition-colors" />
-                      </Button>
-                    </div>
-                  </td>
-                </tr>
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">{brand.slug}</TableCell>
+                  <TableCell className="text-muted-foreground line-clamp-2 max-w-[200px]">{brand.description || '-'}</TableCell>
+                  <TableCell className="text-right">
+                    <ActionButtons 
+                      onEdit={() => openModal(brand)}
+                      onDelete={() => handleDelete(brand.id)}
+                    />
+                  </TableCell>
+                </TableRow>
               ))
             )}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       </div>
+
+      <Pagination 
+        currentPage={currentPage} 
+        totalPages={totalPages} 
+        onPageChange={handlePageChange} 
+      />
 
       {/* Modal */}
       {isModalOpen && (

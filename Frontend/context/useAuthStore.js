@@ -1,5 +1,7 @@
 import { create } from 'zustand';
 import { logout as logoutService } from '../services/authService';
+import useCartStore from '../hooks/useCart';
+import useWishlistStore from '../hooks/useWishlist';
 
 const useAuthStore = create((set) => ({
   user: null,
@@ -34,6 +36,8 @@ const useAuthStore = create((set) => ({
     } finally {
       // Clear local state regardless of API success/failure 
       set({ user: null, isAuthenticated: false });
+      useCartStore.setState({ cart: null, error: null });
+      useWishlistStore.setState({ wishlist: null, error: null });
       
       // We no longer redirect to /login to allow the user to stay on the current page
     }

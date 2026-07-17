@@ -30,6 +30,7 @@ export default function Navbar() {
   const { wishlist, fetchWishlist } = useWishlistStore();
   const [isScrolled, setIsScrolled] = useState(false);
   const [categories, setCategories] = useState([]);
+  const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
 
   // Fetch categories
   useEffect(() => {
@@ -278,19 +279,24 @@ export default function Navbar() {
             <div className="w-full max-w-[800px] flex items-center shadow-sm rounded">
               
               {/* All Categories Dropdown Button */}
-              <div className="relative group w-[240px] h-[46px]">
-                <Link href="/categories" className="w-full h-full bg-primary hover:bg-[#004ca3] text-white flex items-center px-5 font-bold text-[14px] rounded-l transition-colors cursor-pointer">
+              <div 
+                className="relative w-[240px] h-[46px]"
+                onMouseEnter={() => setIsCategoryDropdownOpen(true)}
+                onMouseLeave={() => setIsCategoryDropdownOpen(false)}
+              >
+                <Link href="/categories" onClick={() => setIsCategoryDropdownOpen(false)} className="w-full h-full bg-primary hover:bg-[#004ca3] text-white flex items-center px-5 font-bold text-[14px] rounded-l transition-colors cursor-pointer">
                   <Menu className="mr-3 h-[18px] w-[18px]" />
                   All Categories
-                  <ChevronDown className="ml-auto h-4 w-4 group-hover:rotate-180 transition-transform" />
+                  <ChevronDown className={`ml-auto h-4 w-4 transition-transform ${isCategoryDropdownOpen ? 'rotate-180' : ''}`} />
                 </Link>
                 
                 {/* Hover Dropdown Menu */}
-                <div className="absolute top-full left-0 w-[240px] bg-white border border-[#e5e5e5] rounded-b shadow-lg z-50 hidden group-hover:flex flex-col py-2">
+                <div className={`absolute top-full left-0 w-[240px] bg-white border border-[#e5e5e5] rounded-b shadow-lg z-50 flex-col py-2 ${isCategoryDropdownOpen ? 'flex' : 'hidden'}`}>
                   {categories.map((category) => (
                     <Link 
                       key={category.id} 
                       href={`/products?category=${category.slug}`}
+                      onClick={() => setIsCategoryDropdownOpen(false)}
                       className="px-5 py-2.5 text-[14px] text-foreground hover:text-primary hover:bg-[#f8f8f8] transition-colors"
                     >
                       {category.name}

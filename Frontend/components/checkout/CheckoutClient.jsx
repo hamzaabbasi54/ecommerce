@@ -1,13 +1,21 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useRouter } from "next/navigation";
 import useCartStore from "@/hooks/useCart";
 import Link from "next/link";
 import { Loader2 } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const checkoutSchema = z.object({
   email: z.string().email("Please enter a valid email address."),
@@ -37,6 +45,7 @@ export default function CheckoutClient() {
   const {
     register,
     handleSubmit,
+    control,
     formState: { errors },
   } = useForm({
     resolver: zodResolver(checkoutSchema),
@@ -193,7 +202,7 @@ export default function CheckoutClient() {
                 <input 
                   {...register("firstName")}
                   className={`w-full bg-surface border ${errors.firstName ? 'border-error' : 'border-outline-variant'} rounded px-2.5 py-1.5 text-xs text-on-background transition-colors`} 
-                  id="firstName" type="text"
+                  id="firstName" type="text" placeholder="e.g. John"
                 />
                 {errors.firstName && <p className="text-error text-[10px] mt-0.5">{errors.firstName.message}</p>}
               </div>
@@ -202,7 +211,7 @@ export default function CheckoutClient() {
                 <input 
                   {...register("lastName")}
                   className={`w-full bg-surface border ${errors.lastName ? 'border-error' : 'border-outline-variant'} rounded px-2.5 py-1.5 text-xs text-on-background transition-colors`} 
-                  id="lastName" type="text"
+                  id="lastName" type="text" placeholder="e.g. Doe"
                 />
                 {errors.lastName && <p className="text-error text-[10px] mt-0.5">{errors.lastName.message}</p>}
               </div>
@@ -220,7 +229,7 @@ export default function CheckoutClient() {
                 {errors.email && <p className="text-error text-[10px] mt-0.5">{errors.email.message}</p>}
               </div>
               <div className="flex items-center gap-1.5 pb-1.5 shrink-0">
-                <input className="w-3.5 h-3.5 text-primary border-outline-variant rounded accent-primary cursor-pointer" id="newsletter" type="checkbox" />
+                <Checkbox id="newsletter" className="w-3.5 h-3.5" />
                 <label className="text-xs text-muted-foreground cursor-pointer" htmlFor="newsletter">Email me with news and offers</label>
               </div>
             </div>
@@ -232,7 +241,7 @@ export default function CheckoutClient() {
                 <input 
                   {...register("street")}
                   className={`w-full bg-surface border ${errors.street ? 'border-error' : 'border-outline-variant'} rounded px-2.5 py-1.5 text-xs text-on-background transition-colors`} 
-                  id="address" type="text"
+                  id="address" type="text" placeholder="123 Main St, Apt 4B"
                 />
                 {errors.street && <p className="text-error text-[10px] mt-0.5">{errors.street.message}</p>}
               </div>
@@ -241,7 +250,7 @@ export default function CheckoutClient() {
                 <input 
                   {...register("city")}
                   className={`w-full bg-surface border ${errors.city ? 'border-error' : 'border-outline-variant'} rounded px-2.5 py-1.5 text-xs text-on-background transition-colors`} 
-                  id="city" type="text"
+                  id="city" type="text" placeholder="e.g. New York"
                 />
                 {errors.city && <p className="text-error text-[10px] mt-0.5">{errors.city.message}</p>}
               </div>
@@ -254,22 +263,29 @@ export default function CheckoutClient() {
                 <input 
                   {...register("postalCode")}
                   className={`w-full bg-surface border ${errors.postalCode ? 'border-error' : 'border-outline-variant'} rounded px-2.5 py-1.5 text-xs text-on-background transition-colors`} 
-                  id="postalCode" type="text"
+                  id="postalCode" type="text" placeholder="10001"
                 />
                 {errors.postalCode && <p className="text-error text-[10px] mt-0.5">{errors.postalCode.message}</p>}
               </div>
               <div>
                 <label className="block text-xs font-semibold text-on-surface-variant mb-1" htmlFor="country">Country <span className="text-error">*</span></label>
-                <select 
-                  {...register("country")}
-                  className={`w-full bg-surface border ${errors.country ? 'border-error' : 'border-outline-variant'} rounded px-2.5 py-1.5 text-xs text-on-background transition-colors appearance-none cursor-pointer`} 
-                  id="country"
-                >
-                  <option value="United States">United States</option>
-                  <option value="Canada">Canada</option>
-                  <option value="United Kingdom">United Kingdom</option>
-                  <option value="Germany">Germany</option>
-                </select>
+                <Controller
+                  control={control}
+                  name="country"
+                  render={({ field }) => (
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <SelectTrigger className={`w-full bg-surface border ${errors.country ? 'border-error' : 'border-outline-variant'} h-[30px] rounded px-2.5 py-1.5 text-xs text-on-background transition-colors`}>
+                        <SelectValue placeholder="Select a country" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="United States">United States</SelectItem>
+                        <SelectItem value="Canada">Canada</SelectItem>
+                        <SelectItem value="United Kingdom">United Kingdom</SelectItem>
+                        <SelectItem value="Germany">Germany</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
                 {errors.country && <p className="text-error text-[10px] mt-0.5">{errors.country.message}</p>}
               </div>
             </div>
@@ -423,7 +439,7 @@ export default function CheckoutClient() {
             <button 
               type="submit" 
               disabled={isSubmitting}
-              className="w-full bg-primary text-on-primary py-2 rounded text-sm font-medium hover:bg-[#004ca3] active:scale-[0.98] transition-all flex items-center justify-center gap-1.5 disabled:opacity-50 disabled:active:scale-100 disabled:cursor-not-allowed cursor-pointer"
+              className="w-full bg-primary text-on-primary py-2.5 rounded-full text-sm font-medium hover:bg-[#004ca3] active:scale-[0.98] transition-all flex items-center justify-center gap-1.5 disabled:opacity-50 disabled:active:scale-100 disabled:cursor-not-allowed cursor-pointer"
             >
               {isSubmitting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : null}
               {isSubmitting ? 'Processing...' : 'Place Order'}

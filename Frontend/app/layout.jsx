@@ -1,5 +1,6 @@
 import { Rubik } from "next/font/google";
 import "./globals.css";
+import { Toaster } from 'react-hot-toast';
 
 const rubik = Rubik({
   variable: "--font-rubik",
@@ -22,6 +23,7 @@ export default function RootLayout({ children }) {
       </head>
       <body suppressHydrationWarning className="min-h-full flex flex-col font-body-md bg-surface text-on-surface">
         {children}
+        <Toaster position="top-center" />
       </body>
     </html>
   );

@@ -2,13 +2,19 @@
 
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useCallback } from 'react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export default function ProductSort({ initialSort = 'newest' }) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const handleSortChange = (e) => {
-    const newSort = e.target.value;
+  const handleSortChange = (newSort) => {
     
     // Create a new URLSearchParams object from the current ones
     const params = new URLSearchParams(searchParams.toString());
@@ -29,17 +35,16 @@ export default function ProductSort({ initialSort = 'newest' }) {
       <label htmlFor="sort" className="text-sm font-medium text-foreground whitespace-nowrap">
         Sort by:
       </label>
-      <select 
-        id="sort" 
-        name="sort"
-        defaultValue={initialSort}
-        onChange={handleSortChange}
-        className="bg-background border border-input text-foreground text-sm rounded-md focus:ring-primary focus:border-primary py-1.5 pl-3 pr-8 cursor-pointer w-full sm:w-auto"
-      >
-        <option value="newest">Newest</option>
-        <option value="price_asc">Price: Low to High</option>
-        <option value="price_desc">Price: High to Low</option>
-      </select>
+      <Select defaultValue={initialSort} onValueChange={handleSortChange}>
+        <SelectTrigger id="sort" className="w-full sm:w-[180px] bg-background">
+          <SelectValue placeholder="Sort by" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="newest">Newest</SelectItem>
+          <SelectItem value="price_asc">Price: Low to High</SelectItem>
+          <SelectItem value="price_desc">Price: High to Low</SelectItem>
+        </SelectContent>
+      </Select>
     </div>
   );
 }

@@ -7,12 +7,32 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Save, ArrowLeft, Image as ImageIcon } from 'lucide-react';
 import Link from 'next/link';
+import toast from 'react-hot-toast';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export default function ProductForm({ initialData = null, categories = [], brands = [] }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
   const isEditing = !!initialData;
+
+  let initialMainCategoryId = '';
+  let initialSubcategoryId = '';
+
+  if (initialData?.categoryId) {
+    const selectedCategory = categories.find(c => c.id === initialData.categoryId);
+    if (selectedCategory?.parentId) {
+      initialMainCategoryId = selectedCategory.parentId;
+      initialSubcategoryId = selectedCategory.id;
+    } else {
+      initialMainCategoryId = initialData.categoryId;
+    }
+  }
 
   const [formData, setFormData] = useState({
     name: initialData?.name || '',
@@ -20,12 +40,17 @@ export default function ProductForm({ initialData = null, categories = [], brand
     price: initialData?.price || '',
     discountPrice: initialData?.discountPrice || '',
     stock: initialData?.stock || '',
-    categoryId: initialData?.categoryId || '',
+    mainCategoryId: initialMainCategoryId,
+    subcategoryId: initialSubcategoryId,
     brandId: initialData?.brandId || '',
   });
 
+  const mainCategories = categories.filter(c => !c.parentId);
+  const availableSubcategories = categories.filter(c => c.parentId === formData.mainCategoryId);
+
   const [images, setImages] = useState([]);
   const [previewUrls, setPreviewUrls] = useState(initialData?.images || []);
+  const [thumbnailIndex, setThumbnailIndex] = useState(0);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -36,29 +61,48 @@ export default function ProductForm({ initialData = null, categories = [], brand
     if (e.target.files) {
       const selectedFiles = Array.from(e.target.files);
       setImages(selectedFiles);
-      
-      // Generate preview URLs
       const urls = selectedFiles.map(file => URL.createObjectURL(file));
       setPreviewUrls(urls);
+      setThumbnailIndex(0); // Reset thumbnail to first image
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
 
     try {
       const data = new FormData();
       Object.keys(formData).forEach((key) => {
+        if (key === 'mainCategoryId' || key === 'subcategoryId') return;
         if (formData[key]) {
           data.append(key, formData[key]);
         }
       });
+
+      const finalCategoryId = formData.subcategoryId || formData.mainCategoryId;
+      if (finalCategoryId) {
+        data.append('categoryId', finalCategoryId);
+      }
       
-      images.forEach((image) => {
-        data.append('images', image);
-      });
+      if (images.length > 0) {
+        const thumbnailFile = images[thumbnailIndex];
+        const galleryFiles = images.filter((_, i) => i !== thumbnailIndex);
+
+        if (thumbnailFile) {
+          data.append('thumbnail', thumbnailFile);
+        }
+        galleryFiles.forEach((file) => {
+          data.append('gallery', file);
+        });
+      } else if (previewUrls.length > 0) {
+        // No new files, but maybe reordered existing
+        const newUrls = [
+          previewUrls[thumbnailIndex],
+          ...previewUrls.filter((_, i) => i !== thumbnailIndex)
+        ];
+        newUrls.forEach(url => data.append('existingImages', url));
+      }
 
       const url = isEditing ? `/api/admin/products/${initialData.id}` : '/api/admin/products';
       const method = isEditing ? 'put' : 'post';
@@ -72,14 +116,15 @@ export default function ProductForm({ initialData = null, categories = [], brand
       });
 
       if (response.data.success) {
+        toast.success(isEditing ? 'Product updated successfully' : 'Product created successfully');
         router.push('/admin/products');
         router.refresh();
       } else {
-        setError(response.data.message || 'Failed to save product');
+        toast.error(response.data.message || 'Failed to save product');
       }
     } catch (err) {
       console.error('Error saving product:', err);
-      setError(err.response?.data?.message || 'Failed to save product.');
+      toast.error(err.response?.data?.message || 'Failed to save product.');
     } finally {
       setLoading(false);
     }
@@ -95,7 +140,6 @@ export default function ProductForm({ initialData = null, categories = [], brand
       </div>
 
       <form onSubmit={handleSubmit} className="p-6 space-y-6">
-        {error && <div className="p-3 bg-error/10 text-error rounded border border-error/20 text-sm">{error}</div>}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-2">
@@ -119,35 +163,58 @@ export default function ProductForm({ initialData = null, categories = [], brand
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium text-foreground">Category *</label>
-            <select
-              name="categoryId"
-              value={formData.categoryId}
-              onChange={handleChange}
+            <label className="text-sm font-medium text-foreground">Main Category *</label>
+            <Select
+              value={formData.mainCategoryId}
+              onValueChange={(value) => setFormData(prev => ({ ...prev, mainCategoryId: value, subcategoryId: '' }))}
               required
-              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              <option value="">Select a category</option>
-              {categories.map((c) => (
-                <option key={c.id} value={c.id}>{c.name}</option>
-              ))}
-            </select>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select a category" />
+              </SelectTrigger>
+              <SelectContent>
+                {mainCategories.map((c) => (
+                  <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-foreground">Subcategory</label>
+            <Select
+              value={formData.subcategoryId}
+              onValueChange={(value) => setFormData(prev => ({ ...prev, subcategoryId: value === "none" ? "" : value }))}
+              disabled={!formData.mainCategoryId || availableSubcategories.length === 0}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder={!formData.mainCategoryId ? "Select a main category first" : availableSubcategories.length === 0 ? "No subcategories available" : "None"} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">None</SelectItem>
+                {availableSubcategories.map((c) => (
+                  <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="space-y-2">
             <label className="text-sm font-medium text-foreground">Brand *</label>
-            <select
-              name="brandId"
+            <Select
               value={formData.brandId}
-              onChange={handleChange}
+              onValueChange={(value) => setFormData(prev => ({ ...prev, brandId: value }))}
               required
-              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              <option value="">Select a brand</option>
-              {brands.map((b) => (
-                <option key={b.id} value={b.id}>{b.name}</option>
-              ))}
-            </select>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select a brand" />
+              </SelectTrigger>
+              <SelectContent>
+                {brands.map((b) => (
+                  <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </div>
 
@@ -164,13 +231,23 @@ export default function ProductForm({ initialData = null, categories = [], brand
 
         <div className="space-y-4">
           <label className="text-sm font-medium text-foreground">Product Images {isEditing && '(Upload new to replace)'}</label>
+          <p className="text-xs text-muted-foreground mt-1 mb-3">Click on any image preview below to set it as the main Thumbnail.</p>
           
           {/* Image Previews */}
           {previewUrls.length > 0 && (
             <div className="flex flex-wrap gap-4 mb-4">
               {previewUrls.map((url, index) => (
-                <div key={index} className="relative w-24 h-24 rounded-lg border border-border overflow-hidden bg-white shadow-sm">
+                <div 
+                  key={index} 
+                  onClick={() => setThumbnailIndex(index)}
+                  className={`relative w-24 h-24 rounded-lg border-2 overflow-hidden bg-white shadow-sm cursor-pointer transition-all ${thumbnailIndex === index ? 'border-primary ring-2 ring-primary/20' : 'border-border hover:border-primary/50'}`}
+                >
                   <img src={url} alt={`Preview ${index}`} className="w-full h-full object-contain" />
+                  {thumbnailIndex === index && (
+                    <div className="absolute top-1 left-1 bg-primary text-primary-foreground text-[10px] px-1.5 py-0.5 rounded-sm font-medium">
+                      Main Thumbnail
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -189,7 +266,7 @@ export default function ProductForm({ initialData = null, categories = [], brand
               />
               <Button type="button" variant="outline" className="pointer-events-none">
                 <ImageIcon className="w-4 h-4 mr-2" /> 
-                {images.length > 0 ? `${images.length} file(s) selected` : "Choose Images"}
+                {images.length > 0 ? `${images.length} file(s) selected` : "Upload Images"}
               </Button>
             </div>
             {images.length === 0 && <span className="text-sm text-muted-foreground">No file chosen</span>}

@@ -30,12 +30,9 @@ const useCartStore = create((set, get) => ({
     set({ error: null });
     try {
       const result = await cartService.addToCart({ productId, quantity });
-      // Single fetch to sync — no double loading
-      if (result.success) {
-        const refreshed = await cartService.getCart();
-        if (refreshed.success) {
-          set({ cart: refreshed.data });
-        }
+      // Update store directly with populated cart returned from POST
+      if (result.success && result.data) {
+        set({ cart: result.data });
       }
       return result;
     } catch (err) {

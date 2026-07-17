@@ -3,9 +3,11 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Skeleton } from "@/components/ui/skeleton";
 import { Users, Package, ShoppingCart, DollarSign } from 'lucide-react';
 import PerformanceChart from './PerformanceChart';
 import RecentSalesTable from './RecentSalesTable';
+import Link from 'next/link';
 
 export default function DashboardMetrics() {
   const [data, setData] = useState(null);
@@ -37,12 +39,12 @@ export default function DashboardMetrics() {
       <div className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {[1, 2, 3, 4].map((i) => (
-            <Card key={i} className="animate-pulse bg-surface-container-low border-border h-32"></Card>
+            <Skeleton key={i} className="h-32 rounded-xl" />
           ))}
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-[400px]">
-          <div className="animate-pulse bg-surface-container-low border-border rounded-xl"></div>
-          <div className="animate-pulse bg-surface-container-low border-border rounded-xl"></div>
+          <Skeleton className="rounded-xl h-full" />
+          <Skeleton className="rounded-xl h-full" />
         </div>
       </div>
     );
@@ -58,9 +60,9 @@ export default function DashboardMetrics() {
 
   const metricCards = [
     { title: 'TOTAL REVENUE', value: `$${data?.revenue?.toFixed(2) || '0.00'}`, icon: DollarSign, color: 'text-green-500', bg: 'bg-green-500/10' },
-    { title: 'TOTAL ORDERS', value: data?.orders || 0, icon: ShoppingCart, color: 'text-blue-500', bg: 'bg-blue-500/10' },
-    { title: 'TOTAL USERS', value: data?.users || 0, icon: Users, color: 'text-purple-500', bg: 'bg-purple-500/10' },
-    { title: 'ACTIVE PRODUCTS', value: data?.products || 0, icon: Package, color: 'text-orange-500', bg: 'bg-orange-500/10' },
+    { title: 'TOTAL ORDERS', value: data?.orders || 0, icon: ShoppingCart, color: 'text-blue-500', bg: 'bg-blue-500/10', href: '/admin/orders' },
+    { title: 'TOTAL USERS', value: data?.users || 0, icon: Users, color: 'text-purple-500', bg: 'bg-purple-500/10', href: '/admin/users' },
+    { title: 'ACTIVE PRODUCTS', value: data?.products || 0, icon: Package, color: 'text-orange-500', bg: 'bg-orange-500/10', href: '/admin/products' },
   ];
 
   return (
@@ -69,8 +71,8 @@ export default function DashboardMetrics() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {metricCards.map((metric, index) => {
           const Icon = metric.icon;
-          return (
-            <Card key={index} className="bg-surface-container-lowest border-none shadow-sm hover:shadow-md transition-shadow">
+          const CardContentBlock = (
+            <Card className={`bg-surface-container-lowest border-none shadow-sm transition-all h-full ${metric.href ? 'hover:shadow-md cursor-pointer hover:bg-surface-container-low' : ''}`}>
               <CardHeader className="flex flex-row items-center gap-4 pb-4">
                 <div className={`p-3 rounded-2xl ${metric.bg}`}>
                   <Icon className={`h-6 w-6 ${metric.color}`} />
@@ -86,6 +88,16 @@ export default function DashboardMetrics() {
               </CardContent>
             </Card>
           );
+
+          if (metric.href) {
+            return (
+              <Link key={index} href={metric.href} className="block outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-xl">
+                {CardContentBlock}
+              </Link>
+            );
+          }
+
+          return <div key={index}>{CardContentBlock}</div>;
         })}
       </div>
 

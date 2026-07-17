@@ -47,7 +47,31 @@ export async function POST(request) {
       );
     }
 
-    const product = await prisma.product.findUnique({ where: { id: productId } });
+    const cartInclude = {
+      items: {
+        include: {
+          product: {
+            select: {
+              id: true, name: true, slug: true, price: true,
+              discountPrice: true, images: true, stock: true,
+            },
+          },
+        },
+        orderBy: { createdAt: 'desc' },
+      },
+    };
+
+    const ownerId = user ? { userId: user.id } : { guestId: guest.id };
+
+    // Fetch product and cart simultaneously. Filter cart items to the requested product so we know if it exists.
+    const [product, cart] = await Promise.all([
+      prisma.product.findUnique({ where: { id: productId } }),
+      prisma.cart.findUnique({
+        where: ownerId,
+        include: { items: { where: { productId } } },
+      }),
+    ]);
+
     if (!product || product.deletedAt || !product.isActive) {
       return NextResponse.json(
         { success: false, message: 'Product not found or unavailable' },
@@ -62,14 +86,17 @@ export async function POST(request) {
       );
     }
 
-    const ownerId = user ? { userId: user.id } : { guestId: guest.id };
-    const cart = await getOrCreateCart(ownerId);
+    let finalCartId = cart?.id;
+    let existingCartItem = cart?.items?.[0];
 
-    const existingCartItem = await prisma.cartItem.findFirst({
-      where: { cartId: cart.id, productId },
-    });
+    // If no cart exists at all, create it.
+    if (!finalCartId) {
+      const newCart = await prisma.cart.create({ data: ownerId });
+      finalCartId = newCart.id;
+    }
 
     const priceAtAdd = product.discountPrice ? product.discountPrice : product.price;
+    let updatedCart;
 
     if (existingCartItem) {
       const newQuantity = existingCartItem.quantity + requestedQuantity;
@@ -79,17 +106,34 @@ export async function POST(request) {
           { status: 400 }
         );
       }
-      await prisma.cartItem.update({
+      
+      // Update item and request Prisma to fetch the fully populated cart in the same query
+      const updatedItem = await prisma.cartItem.update({
         where: { id: existingCartItem.id },
         data: { quantity: newQuantity, priceAtAdd },
+        include: { cart: { include: cartInclude } }
       });
+      updatedCart = updatedItem.cart;
     } else {
-      await prisma.cartItem.create({
-        data: { cartId: cart.id, productId, quantity: requestedQuantity, priceAtAdd },
+      // Create item and request Prisma to fetch the fully populated cart in the same query
+      const newItem = await prisma.cartItem.create({
+        data: { cartId: finalCartId, productId, quantity: requestedQuantity, priceAtAdd },
+        include: { cart: { include: cartInclude } }
       });
+      updatedCart = newItem.cart;
     }
 
-    const response = NextResponse.json({ success: true, message: 'Item added to cart successfully' });
+    let cartTotal = 0;
+    updatedCart.items.forEach((item) => {
+      cartTotal += item.priceAtAdd * item.quantity;
+    });
+
+    const response = NextResponse.json({
+      success: true,
+      message: 'Item added to cart successfully',
+      data: { ...updatedCart, cartTotal }
+    });
+
     if (guestCookieHeader) {
       response.headers.set('Set-Cookie', guestCookieHeader);
     }

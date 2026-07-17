@@ -41,9 +41,18 @@ export async function POST(request) {
     const existingSlug = await prisma.product.findUnique({ where: { slug } });
     if (existingSlug) slug = `${slug}-${Date.now()}`;
 
-    // Handle multiple image uploads
-    const imageFiles = formData.getAll('images').filter((f) => f instanceof File);
-    const images = imageFiles.length > 0 ? await saveUploadedFiles(imageFiles, 'products') : [];
+    let images = [];
+    const thumbnailFile = formData.get('thumbnail');
+    if (thumbnailFile instanceof File) {
+      const thumbUrl = await saveUploadedFiles([thumbnailFile], 'products');
+      images.push(...thumbUrl);
+    }
+    
+    const galleryFiles = formData.getAll('gallery').filter((f) => f instanceof File);
+    if (galleryFiles.length > 0) {
+      const galleryUrls = await saveUploadedFiles(galleryFiles, 'products');
+      images.push(...galleryUrls);
+    }
 
     const product = await prisma.product.create({
       data: {

@@ -5,14 +5,32 @@ export const metadata = {
   title: 'Manage Categories | Admin',
 };
 
-export default async function AdminCategoriesPage() {
-  const categories = await prisma.category.findMany({
-    where: { deletedAt: null },
-    include: {
-      parent: { select: { id: true, name: true } },
-    },
-    orderBy: { createdAt: 'desc' },
-  });
+export default async function AdminCategoriesPage({ searchParams }) {
+  const resolvedParams = await searchParams;
+  const page = parseInt(resolvedParams.page) || 1;
+  const limit = parseInt(resolvedParams.limit) || 10;
+  const q = resolvedParams.q || '';
+  const skip = (page - 1) * limit;
+
+  const where = {
+    deletedAt: null,
+    ...(q ? { name: { contains: q, mode: 'insensitive' } } : {})
+  };
+
+  const [categories, total] = await Promise.all([
+    prisma.category.findMany({
+      where,
+      include: {
+        parent: { select: { id: true, name: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+      skip,
+      take: limit,
+    }),
+    prisma.category.count({ where })
+  ]);
+
+  const totalPages = Math.ceil(total / limit);
 
   return (
     <div className="animate-in fade-in duration-500">
@@ -21,7 +39,7 @@ export default async function AdminCategoriesPage() {
         <p className="text-muted-foreground mt-2">Manage product categories and subcategories.</p>
       </div>
 
-      <CategoryList initialCategories={categories} />
+      <CategoryList initialCategories={categories} currentPage={page} totalPages={totalPages} initialQuery={q} />
     </div>
   );
 }

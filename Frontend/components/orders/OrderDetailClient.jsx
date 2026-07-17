@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getOrderById, cancelOrder } from "@/services/orderService";
+import { getOrderById, cancelOrder, requestReturn } from "@/services/orderService";
 import { Loader2 } from "lucide-react";
 import Link from "next/link";
 
@@ -10,6 +10,28 @@ export default function OrderDetailClient({ orderId }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [isCancelling, setIsCancelling] = useState(false);
+  const [isReturnModalOpen, setIsReturnModalOpen] = useState(false);
+  const [returnReason, setReturnReason] = useState("");
+  const [isReturning, setIsReturning] = useState(false);
+
+  const handleReturnSubmit = async () => {
+    if (!returnReason.trim()) return window.alert("Please provide a reason for the return.");
+    setIsReturning(true);
+    try {
+      const result = await requestReturn(orderId, { reason: returnReason, type: 'refund' });
+      if (result.success) {
+        window.alert("Return request submitted successfully. Check your email for confirmation.");
+        setOrder({ ...order, status: 'return_requested' });
+        setIsReturnModalOpen(false);
+      } else {
+        window.alert(result.message || "Failed to submit return request");
+      }
+    } catch (err) {
+      window.alert(err.response?.data?.message || err.message || "Failed to submit return request");
+    } finally {
+      setIsReturning(false);
+    }
+  };
 
   const handleCancelOrder = async () => {
     if (window.confirm("Are you sure you want to cancel this order? This action cannot be undone.")) {
@@ -72,7 +94,8 @@ export default function OrderDetailClient({ orderId }) {
   }
 
   return (
-    <main className="flex-grow w-full max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-4">
+    <>
+      <main className="flex-grow w-full max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop py-4">
       <div className="mb-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3 border-b border-surface-variant pb-3">
         <div>
           <h1 className="text-xl font-bold text-on-background flex items-center gap-2">
@@ -99,6 +122,14 @@ export default function OrderDetailClient({ orderId }) {
               className="bg-transparent border border-error text-error px-3 py-1 rounded-full text-xs font-medium hover:bg-error/10 transition-colors disabled:opacity-50 cursor-pointer"
             >
               {isCancelling ? 'Cancelling...' : 'Cancel Order'}
+            </button>
+          )}
+          {order.status === 'delivered' && (
+            <button
+              onClick={() => setIsReturnModalOpen(true)}
+              className="bg-transparent border border-primary text-primary px-3 py-1 rounded-full text-xs font-medium hover:bg-primary/10 transition-colors cursor-pointer"
+            >
+              Return Order
             </button>
           )}
         </div>
@@ -201,5 +232,39 @@ export default function OrderDetailClient({ orderId }) {
         </div>
       </div>
     </main>
+
+      {/* Return Order Modal */}
+      {isReturnModalOpen && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-surface border border-surface-variant rounded-xl p-6 w-full max-w-md shadow-xl">
+            <h3 className="text-lg font-bold text-on-background mb-4">Request Return</h3>
+            <p className="text-sm text-muted-foreground mb-4">Please provide a reason for returning this order. Our support team will review it and get back to you via email.</p>
+            <textarea
+              className="w-full bg-surface-container border border-surface-variant rounded p-3 text-sm text-on-background focus:outline-none focus:border-primary mb-4 min-h-[100px] resize-y"
+              placeholder="E.g., Item arrived damaged, wrong item sent, etc."
+              value={returnReason}
+              onChange={(e) => setReturnReason(e.target.value)}
+            />
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setIsReturnModalOpen(false)}
+                className="px-4 py-2 text-sm font-medium text-on-surface-variant hover:text-on-background cursor-pointer"
+                disabled={isReturning}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleReturnSubmit}
+                disabled={isReturning}
+                className="px-4 py-2 bg-primary text-on-primary text-sm font-medium rounded hover:bg-primary/90 disabled:opacity-50 flex items-center gap-2 cursor-pointer"
+              >
+                {isReturning && <Loader2 className="w-4 h-4 animate-spin" />}
+                Submit Return
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }

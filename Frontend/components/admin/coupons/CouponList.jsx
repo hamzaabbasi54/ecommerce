@@ -1,15 +1,36 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
 import { Trash2, Plus, Search, Pencil } from 'lucide-react';
+import { useDebounce } from '@/hooks/useDebounce';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import ActionButtons from '@/components/admin/ActionButtons';
+import Pagination from '@/components/ui/Pagination';
 
-export default function CouponList({ initialCoupons }) {
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+export default function CouponList({ initialCoupons, currentPage, totalPages, initialQuery = '' }) {
   const [coupons, setCoupons] = useState(initialCoupons);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState(initialQuery);
+  const debouncedSearchTerm = useDebounce(searchTerm, 500);
+  const initialRender = useRef(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCoupon, setEditingCoupon] = useState(null); // null = create mode, object = edit mode
   const router = useRouter();
@@ -25,6 +46,27 @@ export default function CouponList({ initialCoupons }) {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  // Sync state if props change
+  useEffect(() => {
+    setCoupons(initialCoupons);
+  }, [initialCoupons]);
+
+  useEffect(() => {
+    if (initialRender.current) {
+      initialRender.current = false;
+      return;
+    }
+    router.push(`/admin/coupons?page=1&q=${encodeURIComponent(debouncedSearchTerm)}`);
+  }, [debouncedSearchTerm, router]);
+
+  const handleSearchChange = (e) => {
+    setSearchTerm(e.target.value);
+  };
+
+  const handlePageChange = (page) => {
+    router.push(`/admin/coupons?page=${page}&q=${encodeURIComponent(searchTerm)}`);
+  };
 
   const openCreateModal = () => {
     setEditingCoupon(null);
@@ -94,20 +136,19 @@ export default function CouponList({ initialCoupons }) {
     }
   };
 
-  const filteredCoupons = coupons.filter(c => 
-    c.code.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Filter logic moved to server
+  const displayCoupons = coupons;
 
   return (
     <div className="bg-surface-container-lowest rounded-xl border border-border shadow-sm overflow-hidden relative">
       <div className="p-4 md:p-6 border-b border-border flex flex-col md:flex-row justify-between gap-4 items-center">
-        <div className="relative w-full md:max-w-md">
+        <div className="relative flex-1 w-full">
           <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input 
             placeholder="Search coupon codes..." 
             className="pl-9 w-full bg-surface-container"
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={handleSearchChange}
           />
         </div>
         <Button onClick={openCreateModal} className="w-full md:w-auto">
@@ -115,57 +156,61 @@ export default function CouponList({ initialCoupons }) {
         </Button>
       </div>
 
-      <div className="overflow-x-auto min-h-[300px]">
-        <table className="w-full text-sm text-left">
-          <thead className="text-xs text-muted-foreground uppercase bg-surface-container/50 border-b border-border">
-            <tr>
-              <th className="px-6 py-4 font-medium">Code</th>
-              <th className="px-6 py-4 font-medium">Discount</th>
-              <th className="px-6 py-4 font-medium">Usage</th>
-              <th className="px-6 py-4 font-medium">Limits</th>
-              <th className="px-6 py-4 font-medium">Expiry</th>
-              <th className="px-6 py-4 font-medium text-right">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredCoupons.length === 0 ? (
-              <tr>
-                <td colSpan="6" className="px-6 py-8 text-center text-muted-foreground">
+      <div className="min-h-[300px]">
+        <Table>
+          <TableHeader className="bg-surface-container/50">
+            <TableRow>
+              <TableHead className="font-medium">Code</TableHead>
+              <TableHead className="font-medium">Discount</TableHead>
+              <TableHead className="font-medium">Usage</TableHead>
+              <TableHead className="font-medium">Limits</TableHead>
+              <TableHead className="font-medium">Expiry</TableHead>
+              <TableHead className="text-right font-medium">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {displayCoupons.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">
                   No coupons found.
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
             ) : (
-              filteredCoupons.map((coupon) => (
-                <tr key={coupon.id} className="border-b border-border hover:bg-surface-container-low transition-colors">
-                  <td className="px-6 py-4 font-bold text-foreground">
+              displayCoupons.map((coupon) => (
+                <TableRow key={coupon.id} className="hover:bg-surface-container-low transition-colors">
+                  <TableCell className="font-bold text-foreground">
                     <span className="bg-primary/10 text-primary px-2 py-1 rounded border border-primary/20">{coupon.code}</span>
-                  </td>
-                  <td className="px-6 py-4 text-muted-foreground">
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">
                     {coupon.discountType === 'percentage' ? `${coupon.discountValue}%` : `$${coupon.discountValue}`}
-                  </td>
-                  <td className="px-6 py-4 text-muted-foreground">
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">
                     {coupon.timesUsed} {coupon.usageLimit && `/ ${coupon.usageLimit}`}
-                  </td>
-                  <td className="px-6 py-4 text-xs text-muted-foreground">
+                  </TableCell>
+                  <TableCell className="text-xs text-muted-foreground">
                     {coupon.minOrderValue ? `Min $${coupon.minOrderValue}` : 'No Min'}
-                  </td>
-                  <td className="px-6 py-4 text-xs text-muted-foreground">
+                  </TableCell>
+                  <TableCell className="text-xs text-muted-foreground">
                     {coupon.expiryDate ? new Date(coupon.expiryDate).toLocaleDateString() : 'Never'}
-                  </td>
-                  <td className="px-6 py-4 text-right">
-                    <Button variant="ghost" size="icon" onClick={() => openEditModal(coupon)}>
-                      <Pencil className="w-4 h-4 text-muted-foreground hover:text-primary transition-colors" />
-                    </Button>
-                    <Button variant="ghost" size="icon" onClick={() => handleDelete(coupon.id)}>
-                      <Trash2 className="w-4 h-4 text-muted-foreground hover:text-destructive transition-colors" />
-                    </Button>
-                  </td>
-                </tr>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <ActionButtons 
+                      onEdit={() => openEditModal(coupon)}
+                      onDelete={() => handleDelete(coupon.id)}
+                    />
+                  </TableCell>
+                </TableRow>
               ))
             )}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       </div>
+
+      <Pagination 
+        currentPage={currentPage} 
+        totalPages={totalPages} 
+        onPageChange={handlePageChange} 
+      />
 
       {/* Modal for Create / Edit */}
       {isModalOpen && (
@@ -191,14 +236,18 @@ export default function CouponList({ initialCoupons }) {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Type *</label>
-                  <select
+                  <Select
                     value={formData.discountType}
-                    onChange={(e) => setFormData({...formData, discountType: e.target.value})}
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    onValueChange={(value) => setFormData({...formData, discountType: value})}
                   >
-                    <option value="percentage">Percentage (%)</option>
-                    <option value="fixed">Fixed Amount ($)</option>
-                  </select>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="percentage">Percentage (%)</SelectItem>
+                      <SelectItem value="fixed">Fixed Amount ($)</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Value *</label>

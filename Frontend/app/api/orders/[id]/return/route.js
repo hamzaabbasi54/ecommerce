@@ -1,165 +1,106 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { checkRefundEligibility } from '@/lib/order';
+import { verifyOptionalAuth } from '@/lib/auth';
+import sendEmail from '@/lib/email';
 
-// ─── In-Memory Rate Limiter (shared pattern with lookup) ────────────
-const WINDOW_MS = 15 * 60 * 1000; // 15 minutes
-const MAX_REQUESTS = 5;            // stricter limit for return requests
-const rateLimitMap = new Map();
-
-function isRateLimited(ip) {
-  const now = Date.now();
-  let record = rateLimitMap.get(ip);
-
-  if (!record || now - record.windowStart > WINDOW_MS) {
-    record = { windowStart: now, count: 1 };
-    rateLimitMap.set(ip, record);
-    return false;
-  }
-
-  record.count++;
-  return record.count > MAX_REQUESTS;
-}
-
-setInterval(() => {
-  const now = Date.now();
-  for (const [ip, record] of rateLimitMap) {
-    if (now - record.windowStart > WINDOW_MS) {
-      rateLimitMap.delete(ip);
-    }
-  }
-}, 5 * 60 * 1000);
-
-// ─── POST /api/orders/[id]/return ───────────────────────────────────
-// Public endpoint — no authentication required.
-// Accepts: { email, phone, type, reason }
-//   type: "refund" or "exchange"
-//   email or phone: must match the order's contact info (same verification as lookup)
 export async function POST(request, { params }) {
   try {
-    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-      || request.headers.get('x-real-ip')
-      || 'unknown';
-
-    if (isRateLimited(ip)) {
-      return NextResponse.json(
-        { success: false, message: 'Too many requests. Please try again later.' },
-        { status: 429 }
-      );
+    const { user, guest } = await verifyOptionalAuth(request);
+    if (!user && !guest) {
+      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
     }
 
-    const { id } = await params;
+    const resolvedParams = await params;
+    const { id } = resolvedParams;
+
     const body = await request.json();
-    const { email, phone, type, reason } = body;
+    const { reason } = body;
 
-    // Validate inputs
-    if (!email && !phone) {
-      return NextResponse.json(
-        { success: false, message: 'Email or phone number is required to verify your identity' },
-        { status: 400 }
-      );
+    if (!reason) {
+      return NextResponse.json({ success: false, message: 'Reason for return is required' }, { status: 400 });
     }
 
-    if (!type || !['refund', 'exchange'].includes(type)) {
-      return NextResponse.json(
-        { success: false, message: 'Type must be "refund" or "exchange"' },
-        { status: 400 }
-      );
-    }
-
-    if (!reason || reason.trim().length < 10) {
-      return NextResponse.json(
-        { success: false, message: 'Please provide a reason (at least 10 characters)' },
-        { status: 400 }
-      );
-    }
-
-    // Generic error — never reveal if the order ID exists
-    const notFoundResponse = NextResponse.json(
-      { success: false, message: 'Order not found or contact details do not match' },
-      { status: 404 }
-    );
-
-    // Fetch order
     const order = await prisma.order.findUnique({
       where: { id },
       include: {
-        user: { select: { email: true, phone: true } },
-      },
+        items: {
+          include: {
+            product: true
+          }
+        }
+      }
     });
 
     if (!order) {
-      return notFoundResponse;
+      return NextResponse.json({ success: false, message: 'Order not found' }, { status: 404 });
     }
 
-    // Verify contact info (same logic as lookup)
-    const orderEmail = order.contactEmail || order.user?.email || null;
-    const orderPhone = order.contactPhone || order.user?.phone || null;
+    // Ownership check
+    const isOwner = (user && order.userId === user.id) || (guest && order.guestId === guest.id);
+    const isAdmin = user && user.role === 'ADMIN';
 
-    let contactMatched = false;
-
-    if (email && orderEmail) {
-      contactMatched = email.trim().toLowerCase() === orderEmail.trim().toLowerCase();
+    if (!isOwner && !isAdmin) {
+      return NextResponse.json({ success: false, message: 'Not authorized to return this order' }, { status: 403 });
     }
 
-    if (!contactMatched && phone && orderPhone) {
-      const normalizePhone = (p) => p.replace(/\D/g, '');
-      contactMatched = normalizePhone(phone) === normalizePhone(orderPhone);
+    if (order.status !== 'delivered') {
+      return NextResponse.json({ 
+        success: false, 
+        message: `Only delivered orders can be returned. Current status: ${order.status}` 
+      }, { status: 400 });
     }
 
-    if (!contactMatched) {
-      return notFoundResponse;
+    // Process return in a transaction
+    const [returnRequest, updatedOrder] = await prisma.$transaction([
+      prisma.returnRequest.create({
+        data: {
+          orderId: order.id,
+          reason,
+          type: 'refund',
+          status: 'pending'
+        }
+      }),
+      prisma.order.update({
+        where: { id },
+        data: { status: 'return_requested' }
+      })
+    ]);
+
+    // Send Return Confirmation Email
+    try {
+      const emailHtml = `
+        <div style="font-family: Arial, sans-serif; max-w-lg mx-auto; color: #333;">
+          <h2 style="color: #000;">Return Request Received</h2>
+          <p>Hi,</p>
+          <p>We have received your return request for Order <strong>#${order.id.slice(-8).toUpperCase()}</strong>.</p>
+          <p><strong>Reason provided:</strong> ${reason}</p>
+          <p>Our team will review your request and get back to you with the next steps regarding shipping and refunds.</p>
+          <p>Thank you for shopping with Electronica.</p>
+        </div>
+      `;
+      
+      const recipientEmail = user?.email || order.contactEmail;
+
+      if (recipientEmail) {
+        await sendEmail({
+          email: recipientEmail,
+          subject: `Return Request Received - Order #${order.id.slice(-8).toUpperCase()}`,
+          html: emailHtml
+        });
+      }
+    } catch (emailError) {
+      console.error('Failed to send order return email:', emailError);
     }
-
-    // Check eligibility using the shared function
-    const eligibility = checkRefundEligibility(order);
-    if (!eligibility.eligible) {
-      return NextResponse.json(
-        { success: false, message: eligibility.reason },
-        { status: 400 }
-      );
-    }
-
-    // Check if there's already a pending return request for this order
-    const existingRequest = await prisma.returnRequest.findFirst({
-      where: {
-        orderId: id,
-        status: 'pending',
-      },
-    });
-
-    if (existingRequest) {
-      return NextResponse.json(
-        { success: false, message: 'A return request is already pending for this order' },
-        { status: 400 }
-      );
-    }
-
-    // Create the return request
-    const returnRequest = await prisma.returnRequest.create({
-      data: {
-        orderId: id,
-        type,
-        reason: reason.trim(),
-      },
-    });
 
     return NextResponse.json({
       success: true,
-      message: `${type.charAt(0).toUpperCase() + type.slice(1)} request submitted successfully`,
-      data: {
-        id: returnRequest.id,
-        type: returnRequest.type,
-        reason: returnRequest.reason,
-        status: returnRequest.status,
-        createdAt: returnRequest.createdAt,
-      },
-    }, { status: 201 });
+      message: 'Return request submitted successfully',
+      data: updatedOrder
+    });
+
   } catch (error) {
-    console.error('Return request error:', error);
-    return NextResponse.json(
-      { success: false, message: 'Internal server error' },
-      { status: 500 }
-    );
+    console.error('Return order error:', error);
+    if (error instanceof Response) return error;
+    return NextResponse.json({ success: false, message: 'Internal server error' }, { status: 500 });
   }
 }

@@ -6,11 +6,11 @@ import { useRouter } from 'next/navigation';
 import PersonalInfoForm from './PersonalInfoForm';
 import SecuritySettingsForm from './SecuritySettingsForm';
 import AddressManager from './AddressManager';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function ProfileLayoutClient() {
   const { user, isAuthenticated, loading } = useAuthStore();
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState('personal');
 
   // Wait for auth check
   if (loading) {
@@ -40,34 +40,36 @@ export default function ProfileLayoutClient() {
         <p className="text-muted-foreground mt-2 text-lg">Manage your account details and preferences.</p>
       </div>
 
-      <div className="flex flex-col lg:flex-row gap-10 items-start">
+      <Tabs defaultValue="personal" orientation="vertical" className="flex flex-col lg:flex-row gap-10 items-start">
         {/* Sidebar Navigation */}
         <aside className="w-full lg:w-64 shrink-0 bg-surface-container-lowest border border-border rounded-xl p-4 sticky top-24 shadow-sm">
-          <nav className="flex flex-col space-y-2">
+          <TabsList className="flex flex-col space-y-2 h-auto bg-transparent p-0 w-full items-stretch">
             {tabs.map((tab) => (
-              <button
+              <TabsTrigger
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-3 w-full text-left px-4 py-3 rounded-lg transition-colors duration-200 font-medium ${
-                  activeTab === tab.id 
-                    ? 'bg-primary text-primary-foreground shadow-md' 
-                    : 'text-muted-foreground hover:bg-surface-container hover:text-foreground'
-                }`}
+                value={tab.id}
+                className="flex items-center gap-3 w-full justify-start px-4 py-3 rounded-lg transition-colors duration-200 font-medium text-muted-foreground hover:bg-surface-container hover:text-foreground data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md data-[state=active]:hover:bg-primary data-[state=active]:hover:text-primary-foreground"
               >
                 <span className="material-symbols-outlined text-[20px]" style={{fontVariationSettings: "'FILL' 1"}}>{tab.icon}</span>
                 {tab.label}
-              </button>
+              </TabsTrigger>
             ))}
-          </nav>
+          </TabsList>
         </aside>
 
         {/* Main Content Area */}
         <section className="flex-1 w-full min-w-0 bg-surface-container-lowest border border-border rounded-xl p-6 md:p-8 shadow-sm min-h-[500px]">
-          {activeTab === 'personal' && <PersonalInfoForm user={user} />}
-          {activeTab === 'security' && <SecuritySettingsForm />}
-          {activeTab === 'addresses' && <AddressManager />}
+          <TabsContent value="personal" className="mt-0 outline-none">
+            <PersonalInfoForm user={user} />
+          </TabsContent>
+          <TabsContent value="security" className="mt-0 outline-none">
+            <SecuritySettingsForm />
+          </TabsContent>
+          <TabsContent value="addresses" className="mt-0 outline-none">
+            <AddressManager />
+          </TabsContent>
         </section>
-      </div>
+      </Tabs>
     </main>
   );
 }
